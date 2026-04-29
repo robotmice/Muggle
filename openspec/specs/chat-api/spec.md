@@ -6,7 +6,7 @@ TBD - Defines the backend API for handling chat messages.
 ## Requirements
 
 ### Requirement: Chat Endpoint
-The backend SHALL expose a POST endpoint at `/chat` that accepts a JSON payload containing the user's message.
+The backend SHALL expose a POST endpoint at `/chat` that accepts a JSON payload containing the user's message. This endpoint MUST be defined within a dedicated `chat` blueprint.
 
 #### Scenario: Successful message processing
 - **WHEN** a valid POST request is received at `/chat` with a JSON payload `{ "message": "hello" }`
