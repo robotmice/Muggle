@@ -36,5 +36,12 @@ class ConfigManager:
             "debug": server_config.get("debug", False),
         }
 
+    def get_prompts_params(self) -> dict:
+        """Retrieve prompt registry settings from the config file."""
+        prompts_config = self.config.get("prompts", {})
+        return {
+            "path": prompts_config.get("path", "prompts"),
+        }
+
 # Global instance for easy access
 cfg = ConfigManager()
