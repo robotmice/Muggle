@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from muggle.ai import ChatProcessor
-from muggle.registry import ModelRegistry, PromptRegistry
+from muggle.core.processor import ChatProcessor
+from muggle.infra.registry import ModelRegistry, PromptRegistry
 
 class TestChatProcessor(unittest.TestCase):
-    @patch('muggle.registry.model.init_chat_model')
+    @patch('muggle.infra.registry.model.init_chat_model')
     def test_get_response_interface(self, mock_init_model):
         # Setup mock registries
         model_registry = ModelRegistry()

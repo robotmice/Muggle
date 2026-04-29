@@ -1,15 +1,22 @@
 from pathlib import Path
+from importlib import resources
 import jinja2
-from muggle.utils import parse_frontmatter
-from muggle.exceptions import PromptNotFoundError
+from muggle.shared.utils import parse_frontmatter
+from muggle.core.exceptions import PromptNotFoundError
 
 class PromptRegistry:
-    def __init__(self, prompts_dir: str):
-        self.prompts_dir = Path(prompts_dir)
+    def __init__(self, prompts_dir: str = None):
+        if prompts_dir:
+            self.prompts_dir = Path(prompts_dir)
+        else:
+            # Default to internal package resources
+            self.prompts_dir = resources.files("muggle.infra.prompts")
+            
         self._cache = {}  # { (type, name): {metadata, template} }
         self._jinja_env = jinja2.Environment()
 
-    def _get_prompt_path(self, prompt_type: str, prompt_name: str) -> Path:
+    def _get_prompt_path(self, prompt_type: str, prompt_name: str):
+        # Works for both Path and importlib Traversable
         return self.prompts_dir / prompt_type / f"{prompt_name}.md"
 
     def _load_prompt(self, prompt_type: str, prompt_name: str) -> dict:
@@ -19,8 +26,7 @@ class PromptRegistry:
             if not path.exists():
                 raise PromptNotFoundError(prompt_name=prompt_name, prompt_type=prompt_type)
             
-            with open(path, "r", encoding="utf-8") as f:
-                content = f.read()
+            content = path.read_text(encoding="utf-8")
             
             metadata, template_str = parse_frontmatter(content)
             self._cache[cache_key] = {

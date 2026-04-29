@@ -2,9 +2,9 @@ import unittest
 import os
 import shutil
 from pathlib import Path
-from muggle.utils import parse_frontmatter
-from muggle.registry import PromptRegistry
-from muggle.exceptions import PromptNotFoundError
+from muggle.shared.utils import parse_frontmatter
+from muggle.infra.registry import PromptRegistry
+from muggle.core.exceptions import PromptNotFoundError
 
 class TestPromptRegistry(unittest.TestCase):
     def setUp(self):

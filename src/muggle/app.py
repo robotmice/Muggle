@@ -1,12 +1,13 @@
-import os
+from pathlib import Path
 from flask import Flask, send_from_directory
-from muggle.config import cfg
-from muggle.ai import ChatProcessor
-from muggle.registry import ModelRegistry, PromptRegistry
+from muggle.infra.config import cfg
+from muggle.core.processor import ChatProcessor
+from muggle.infra.registry import ModelRegistry, PromptRegistry
 from muggle.blueprints import register_blueprints
 
 def create_app():
-    app = Flask(__name__, static_folder='static')
+    static_folder = Path(__file__).parent / "static"
+    app = Flask(__name__, static_folder=str(static_folder))
     
     # 1. Setup Components
     setup_components(app)
@@ -27,7 +28,11 @@ def setup_components(app):
     model_registry = ModelRegistry()
     
     prompt_params = cfg.get_prompts_params()
-    prompt_registry = PromptRegistry(prompts_dir=prompt_params["path"])
+    prompt_path = Path(prompt_params["path"])
+    if not prompt_path.exists():
+        prompt_path = None
+        
+    prompt_registry = PromptRegistry(prompts_dir=prompt_path)
     
     # Register models from config
     ai_params = cfg.get_ai_params()

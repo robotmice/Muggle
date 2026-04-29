@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
-from muggle.registry import ModelRegistry, PromptRegistry
-from muggle.exceptions import PromptNotFoundError
+from muggle.infra.registry import ModelRegistry, PromptRegistry
+from muggle.core.exceptions import PromptNotFoundError
 
 logger = logging.getLogger(__name__)
 

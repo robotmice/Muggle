@@ -16,5 +16,5 @@ The system MUST allow execution using the `muggle` command when installed or man
 The `muggle.app` module MUST provide a `run` function that serves as the entry point for the application.
 
 #### Scenario: Calling the run function directly
-- **WHEN** the `run()` function in `muggle/app.py` is invoked
+- **WHEN** the `run()` function in `src/muggle/app.py` is invoked
 - **THEN** the Flask application starts running with the configured settings

@@ -1,10 +1,10 @@
 import unittest
 import os
 from unittest.mock import patch, MagicMock
-from muggle.config import ConfigManager
+from muggle.infra.config import ConfigManager
 
 class TestConfigManager(unittest.TestCase):
-    @patch("muggle.config.load_dotenv")
+    @patch("muggle.infra.config.load_dotenv")
     @patch("tomllib.load")
     @patch("builtins.open")
     @patch("pathlib.Path.exists")
@@ -26,7 +26,7 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual(params["model"], "test-model")
         self.assertEqual(params["temperature"], 0.5)
 
-    @patch("muggle.config.load_dotenv")
+    @patch("muggle.infra.config.load_dotenv")
     def test_dotenv_loading(self, mock_load_dotenv):
         ConfigManager()
         mock_load_dotenv.assert_called_once()
