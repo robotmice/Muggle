@@ -1,0 +1,33 @@
+[project]
+name = "muggle"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Edward Wu", email = "robotmice@gmail.com" }
+]
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "ragas (>=0.4.3,<0.5.0)",
+    "scikit-learn (>=1.8.0,<2.0.0)",
+    "langchain (>=1.2.15,<2.0.0)",
+    "langgraph (>=1.1.10,<2.0.0)",
+    "langchain-community (>=0.4.1,<0.5.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)",
+    "langchain-deepseek (>=1.0.1,<2.0.0)",
+    "flask (>=3.1.3,<4.0.0)",
+    "pandas (>=3.0.2,<4.0.0)",
+    "requests (>=2.33.1,<3.0.0)",
+    "pydantic (>=2.13.3,<3.0.0)",
+    "pymilvus (>=2.6.12,<3.0.0)",
+    "dashscope (>=1.25.17,<2.0.0)"
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[tool.poetry.scripts]
+muggle = "muggle.main:print_hi"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
