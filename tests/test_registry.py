@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from muggle.utils import parse_frontmatter
 from muggle.registry import PromptRegistry
+from muggle.exceptions import PromptNotFoundError
 
 class TestPromptRegistry(unittest.TestCase):
     def setUp(self):
@@ -43,8 +44,13 @@ class TestPromptRegistry(unittest.TestCase):
 
     def test_registry_missing_prompt(self):
         registry = PromptRegistry(str(self.test_dir))
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(PromptNotFoundError) as cm:
             registry.get_system_prompt("nonexistent")
+        
+        self.assertEqual(cm.exception.prompt_name, "nonexistent")
+        self.assertEqual(cm.exception.prompt_type, "system")
+        self.assertIn("'nonexistent'", str(cm.exception))
+        self.assertIn("'system'", str(cm.exception))
 
     def test_jinja_logic(self):
         prompt_path = self.test_dir / "user" / "logic.md"
