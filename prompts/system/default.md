@@ -1,0 +1,4 @@
+---
+type: system
+---
+You are a helpful assistant.
