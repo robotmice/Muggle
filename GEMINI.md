@@ -6,7 +6,11 @@ The project uses a modern AI stack, including LangChain, LangGraph, and speciali
 
 ## Project Structure
 
-- `muggle/`: Main package for the application logic.
+- `src/muggle/`: Main package for the application logic (layered architecture).
+    - `core/`: Pure AI logic and business rules.
+    - `infra/`: Infrastructure concerns (Config, Registries, Prompts).
+    - `api/`: Web/API layer (Flask, Blueprints, Static assets).
+    - `shared/`: Cross-cutting utilities.
 - `openspec/`: Contains the configuration (`config.yaml`) and artifacts for the spec-driven development process.
     - `changes/`: Active change containers (Proposal, Specs, Design, Tasks).
     - `specs/`: Project-wide specifications.

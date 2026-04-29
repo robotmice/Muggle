@@ -15,7 +15,7 @@ poetry install
 ## Usage
 
 ```bash
-poetry run python muggle/main.py
+poetry run muggle
 ```
 
 ## Testing
