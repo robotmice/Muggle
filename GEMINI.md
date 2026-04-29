@@ -51,7 +51,7 @@ Use these commands (via `/opsx:<command>`) to manage the development lifecycle:
 ### Commands
 
 - **Install Dependencies:** `poetry install`
-- **Run Application:** `poetry run python muggle/main.py` (or `poetry run muggle`)
+- **Run Application:** `poetry run muggle`
 - **Run Tests:** `poetry run pytest`
 
 ## Tech Stack
