@@ -8,6 +8,7 @@ The initial implementation of the `PromptRegistry` was added directly to `muggle
 - Move `ModelRegistry` and `PromptRegistry` into a `muggle/registry/` package.
 - Create a `muggle/exceptions.py` file for custom AI exceptions.
 - Implement `PromptNotFoundError` and ensure it's raised by `PromptRegistry`.
+- **Integrate `PromptRegistry` into `ChatProcessor` to enable template-driven responses.**
 - Update all imports in `ai.py`, `app.py`, and `tests/` to use the new structure.
 
 **Non-Goals:**
@@ -28,6 +29,10 @@ The initial implementation of the `PromptRegistry` was added directly to `muggle
 - **Rationale**: `PromptNotFoundError` will inherit from a base `MuggleError` to allow for catching all project-specific errors at once if desired.
 
 ## Risks / Trade-offs
+
+- **[Risk] Broken Imports** → **Mitigation**: Perform a global search for registry imports and update them. Ensure all tests pass after refactoring.
+- **[Risk] Circular Dependencies** → **Mitigation**: Keep the `exceptions.py` module leaf-level (no internal imports from other muggle modules).
+Trade-offs
 
 - **[Risk] Broken Imports** → **Mitigation**: Perform a global search for registry imports and update them. Ensure all tests pass after refactoring.
 - **[Risk] Circular Dependencies** → **Mitigation**: Keep the `exceptions.py` module leaf-level (no internal imports from other muggle modules).
