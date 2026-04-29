@@ -24,5 +24,8 @@ def chat():
     
     return jsonify({"response": response_text})
 
-if __name__ == '__main__':
+def run():
     app.run(debug=True, port=5000)
+
+if __name__ == '__main__':
+    run()
