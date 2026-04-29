@@ -1,17 +1,20 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from muggle.ai import ChatProcessor
+from muggle.registry import ModelRegistry
 
 class TestChatProcessor(unittest.TestCase):
-    @patch('muggle.ai.init_chat_model')
+    @patch('muggle.registry.init_chat_model')
     @patch('muggle.ai.cfg')
     def test_get_response_interface(self, mock_cfg, mock_init_model):
-        # Setup mock config
-        mock_cfg.get_ai_params.return_value = {
-            "model": "test-model",
-            "provider": "test-provider",
-            "temperature": 0.5
-        }
+        # Setup mock registry
+        registry = ModelRegistry()
+        registry.register(
+            "default", 
+            provider="test-provider", 
+            model_id="test-model", 
+            temperature=0.5
+        )
         
         # Setup mock model
         mock_model = MagicMock()
@@ -19,7 +22,8 @@ class TestChatProcessor(unittest.TestCase):
         mock_init_model.return_value = mock_model
         
         # Test
-        processor = ChatProcessor()
+        processor = ChatProcessor(registry=registry)
+        processor.warm_up()
         response = processor.get_response("Hello")
         
         self.assertEqual(response, "Mocked Response")
@@ -29,6 +33,7 @@ class TestChatProcessor(unittest.TestCase):
             temperature=0.5
         )
         mock_model.invoke.assert_called_once_with("Hello")
+        self.assertTrue(processor.is_initialized())
 
 if __name__ == '__main__':
     unittest.main()
