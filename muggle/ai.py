@@ -1,6 +1,6 @@
-import os
 from abc import ABC, abstractmethod
-from langchain_deepseek import ChatDeepSeek
+from langchain.chat_models import init_chat_model
+from muggle.config import cfg
 
 class ProcessorInterface(ABC):
     @abstractmethod
@@ -10,10 +10,12 @@ class ProcessorInterface(ABC):
 
 class ChatProcessor(ProcessorInterface):
     def __init__(self):
-        # Initializing DeepSeek with standard environment variable lookup
-        self.model = ChatDeepSeek(
-            model="deepseek-chat",
-            temperature=0.7,
+        # Initializing model using parameters from ConfigManager and init_chat_model
+        params = cfg.get_ai_params()
+        self.model = init_chat_model(
+            model=params["model"],
+            model_provider=params["provider"],
+            temperature=params["temperature"],
         )
 
     def get_response(self, message: str) -> str:

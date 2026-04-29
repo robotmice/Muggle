@@ -10,7 +10,7 @@ The system SHALL define a clear interface for processing messages that can accom
 
 #### Scenario: Simple LLM processing
 - **WHEN** the processor receives a message
-- **THEN** it uses a DeepSeek model (via LangChain) to generate a response
+- **THEN** it uses LangChain's `init_chat_model` (initialized via the configuration utility) to generate a response
 
 #### Scenario: Extensibility for LangGraph
 - **WHEN** a LangGraph workflow is implemented in the future
