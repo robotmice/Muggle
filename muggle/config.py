@@ -27,5 +27,14 @@ class ConfigManager:
             "temperature": ai_config.get("temperature", 0.7),
         }
 
+    def get_server_params(self) -> dict:
+        """Retrieve server settings from the config file."""
+        server_config = self.config.get("server", {})
+        return {
+            "host": server_config.get("host", "127.0.0.1"),
+            "port": server_config.get("port", 5000),
+            "debug": server_config.get("debug", False),
+        }
+
 # Global instance for easy access
 cfg = ConfigManager()
