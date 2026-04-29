@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from langchain.chat_models import init_chat_model
-from muggle.config import cfg
-from muggle.registry import ModelRegistry
+import logging
+from muggle.registry import ModelRegistry, PromptRegistry
+from muggle.exceptions import PromptNotFoundError
+
+logger = logging.getLogger(__name__)
 
 class ProcessorInterface(ABC):
     @abstractmethod
@@ -10,8 +12,9 @@ class ProcessorInterface(ABC):
         pass
 
 class ChatProcessor(ProcessorInterface):
-    def __init__(self, registry: ModelRegistry, model_alias: str = "default"):
+    def __init__(self, registry: ModelRegistry, prompt_registry: PromptRegistry, model_alias: str = "default"):
         self.registry = registry
+        self.prompt_registry = prompt_registry
         self.model_alias = model_alias
         self._ready = False
         self._last_error = None
@@ -43,7 +46,19 @@ class ChatProcessor(ProcessorInterface):
     def get_response(self, message: str) -> str:
         try:
             model = self.registry.get_model(self.model_alias)
-            response = model.invoke(message)
+            
+            try:
+                system_prompt = self.prompt_registry.get_system_prompt("default")
+            except PromptNotFoundError as e:
+                logger.error(f"Required prompt missing: {e}")
+                return "Error: AI configuration incomplete (system prompt missing)."
+
+            messages = [
+                ("system", system_prompt),
+                ("human", message)
+            ]
+            
+            response = model.invoke(messages)
             return response.content
         except Exception as e:
             return f"Error connecting to AI: {str(e)}"

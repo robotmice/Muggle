@@ -2,7 +2,7 @@ import os
 from flask import Flask, send_from_directory
 from muggle.config import cfg
 from muggle.ai import ChatProcessor
-from muggle.registry import ModelRegistry
+from muggle.registry import ModelRegistry, PromptRegistry
 from muggle.blueprints import register_blueprints
 
 def create_app():
@@ -23,13 +23,15 @@ def create_app():
 
 def setup_components(app):
     """Initialize and attach core components to the Flask app."""
-    # Initialize Registry
-    registry = ModelRegistry()
+    # Initialize Registries
+    model_registry = ModelRegistry()
+    
+    prompt_params = cfg.get_prompts_params()
+    prompt_registry = PromptRegistry(prompts_dir=prompt_params["path"])
     
     # Register models from config
-    # Note: In a real app, this might iterate over multiple model definitions
     ai_params = cfg.get_ai_params()
-    registry.register(
+    model_registry.register(
         "default", 
         provider=ai_params["provider"], 
         model_id=ai_params["model"],
@@ -37,7 +39,11 @@ def setup_components(app):
     )
     
     # Initialize Processor
-    processor = ChatProcessor(registry=registry, model_alias="default")
+    processor = ChatProcessor(
+        registry=model_registry, 
+        prompt_registry=prompt_registry, 
+        model_alias="default"
+    )
     
     # Warm up (Graceful Startup)
     try:
@@ -47,7 +53,8 @@ def setup_components(app):
     
     # Attach to app for blueprint access
     app.processor = processor
-    app.registry = registry
+    app.model_registry = model_registry
+    app.prompt_registry = prompt_registry
 
 def run():
     """CLI entrypoint to run the Flask application."""

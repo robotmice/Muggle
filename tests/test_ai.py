@@ -1,20 +1,22 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from muggle.ai import ChatProcessor
-from muggle.registry import ModelRegistry
+from muggle.registry import ModelRegistry, PromptRegistry
 
 class TestChatProcessor(unittest.TestCase):
-    @patch('muggle.registry.init_chat_model')
-    @patch('muggle.ai.cfg')
-    def test_get_response_interface(self, mock_cfg, mock_init_model):
-        # Setup mock registry
-        registry = ModelRegistry()
-        registry.register(
+    @patch('muggle.registry.model.init_chat_model')
+    def test_get_response_interface(self, mock_init_model):
+        # Setup mock registries
+        model_registry = ModelRegistry()
+        model_registry.register(
             "default", 
             provider="test-provider", 
             model_id="test-model", 
             temperature=0.5
         )
+        
+        prompt_registry = MagicMock(spec=PromptRegistry)
+        prompt_registry.get_system_prompt.return_value = "System Prompt"
         
         # Setup mock model
         mock_model = MagicMock()
@@ -22,7 +24,7 @@ class TestChatProcessor(unittest.TestCase):
         mock_init_model.return_value = mock_model
         
         # Test
-        processor = ChatProcessor(registry=registry)
+        processor = ChatProcessor(registry=model_registry, prompt_registry=prompt_registry)
         processor.warm_up()
         response = processor.get_response("Hello")
         
@@ -32,7 +34,14 @@ class TestChatProcessor(unittest.TestCase):
             model_provider="test-provider",
             temperature=0.5
         )
-        mock_model.invoke.assert_called_once_with("Hello")
+        
+        # Verify prompt injection
+        prompt_registry.get_system_prompt.assert_called_once_with("default")
+        mock_model.invoke.assert_called_once_with([
+            ("system", "System Prompt"),
+            ("human", "Hello")
+        ])
+        
         self.assertTrue(processor.is_initialized())
 
 if __name__ == '__main__':

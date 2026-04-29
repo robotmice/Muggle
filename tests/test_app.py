@@ -12,7 +12,8 @@ class TestApp(unittest.TestCase):
         """Test that the application factory creates a Flask instance."""
         self.assertIsInstance(self.app, Flask)
         self.assertTrue(hasattr(self.app, 'processor'))
-        self.assertTrue(hasattr(self.app, 'registry'))
+        self.assertTrue(hasattr(self.app, 'model_registry'))
+        self.assertTrue(hasattr(self.app, 'prompt_registry'))
 
     def test_health_endpoint_healthy(self):
         """Test the /health endpoint returns 200 when initialized."""
