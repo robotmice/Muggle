@@ -22,9 +22,8 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.json['status'], 'healthy')
 
     def test_health_endpoint_unhealthy(self):
-        """Test the /health endpoint returns 503 when processor is not ready."""
-        # Manually set processor to not ready
-        self.app.processor._ready = False
+        """Test the /health endpoint returns 503 when processor is not present."""
+        del self.app.processor
         response = self.client.get('/health')
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json['status'], 'unhealthy')

@@ -12,10 +12,4 @@ def health():
             "errors": ["Processor not found in application context"]
         }), 503
         
-    if not processor.is_initialized():
-        return jsonify({
-            "status": "unhealthy",
-            "errors": [processor.last_error or "Processor is not initialized"]
-        }), 503
-        
     return jsonify({"status": "healthy"}), 200

@@ -51,8 +51,7 @@ class TestRAGFlow(unittest.TestCase):
 
         # 3. Initialize Processor
         processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
-        processor.warm_up()
-        
+
         # 4. Execute
         response = processor.get_response("Hello, tell me more about insurance", thread_id="rag_test")
         

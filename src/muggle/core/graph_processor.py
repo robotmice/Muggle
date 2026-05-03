@@ -32,9 +32,6 @@ class GraphProcessor(ProcessorInterface):
         self.vector_store = vector_store
         self.default_model = default_model
 
-        self._ready = False
-        self._last_error = None
-
         model = registry.get_model(default_model)
 
         rerank_params = cfg.get_rerank_params()
@@ -100,19 +97,3 @@ class GraphProcessor(ProcessorInterface):
                 return "Error: LLM configuration incomplete (required prompt missing)."
             return f"Error connecting to LLM: {str(e)}"
 
-    def warm_up(self):
-        try:
-            self.registry.get_model(self.default_model)
-            self._ready = True
-            self._last_error = None
-        except Exception as e:
-            self._ready = False
-            self._last_error = str(e)
-            raise e
-
-    def is_initialized(self) -> bool:
-        return self._ready
-
-    @property
-    def last_error(self):
-        return self._last_error

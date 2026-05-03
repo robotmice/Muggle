@@ -54,12 +54,6 @@ def setup_components(app: Flask):
         default_model=STR_LLM_DEFAULT
     )
 
-    # Warm up (Graceful Startup)
-    try:
-        processor.warm_up()
-    except Exception as e:
-        app.logger.error(f"Failed to warm up Processor: {e}")
-
     # Attach to app for blueprint access
     setattr(app, 'processor', processor)
     setattr(app, 'model_registry', model_registry)
