@@ -14,21 +14,21 @@ from pydantic import BaseModel, Field
 
 from muggle.core.processor import ProcessorInterface
 from muggle.infra.registry import ModelRegistry, PromptRegistry
-from muggle.shared.constants import STR_PROMPT_INGEST, STR_LLM_DEFAULT, STR_NODE_INGEST, STR_NODE_UNHANDLED, STR_PROMPT_INSURANCE, STR_NODE_INSURANCE
+from muggle.shared.constants import STR_PROMPT_INTENT_CHECK, STR_LLM_DEFAULT, STR_NODE_INTENT_CHECK, STR_NODE_UNHANDLED, STR_PROMPT_INQUIRY, STR_NODE_INQUIRY
 
 
 class WorkflowState(BaseModel):
     messages: Annotated[list, add_messages, Field(default_factory=list)]
-    is_insurance_related_inquiry: Annotated[bool, Field(description="")] = False
-    response: Annotated[str | None, Field(description="Response of the inquiry")] = None
+    pass_intent_check: Annotated[bool, Field(description="")] = False
+    response: Annotated[str | None, Field(description="Response to the inquiry")] = None
 
 
-class IngestResult(BaseModel):
-    is_insurance_related_inquiry: Annotated[bool, Field(description="Result of the analysis")] = False
+class IntentCheckResult(BaseModel):
+    pass_intent_check: Annotated[bool, Field(description="Result of the intent analysis")] = False
 
 
-class InsuranceInquiryResult(BaseModel):
-    response: Annotated[str | None, Field(description="Response of the inquiry")] = None
+class InquiryResult(BaseModel):
+    response: Annotated[str | None, Field(description="Response to the inquiry")] = None
 
 
 def simple_human_message(messages: list[str]):
@@ -44,7 +44,7 @@ def config_map(thread_id: str | None = None) -> RunnableConfig:
 
 
 def ingest_router(state: WorkflowState) -> bool:
-    return state.is_insurance_related_inquiry
+    return state.pass_intent_check
 
 
 def unhandled_response_node(state: WorkflowState):
@@ -60,30 +60,30 @@ class GraphProcessor(ProcessorInterface):
         self._ready = False
         self._last_error = None
 
-        def ingest_node(state: WorkflowState):
-            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INGEST),
-                                 response_format=IngestResult).invoke(state)
+        def intent_check_node(state: WorkflowState):
+            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INTENT_CHECK),
+                                 response_format=IntentCheckResult).invoke(state)
 
-            return {"is_insurance_related_inquiry": pydash.get(state, "structured_response.is_insurance_related_inquiry"),
+            return {"pass_intent_check": pydash.get(state, "structured_response.pass_intent_check"),
                     "messages": pydash.get(state, "messages")}
 
-        def insurance_inquiry_node(state: WorkflowState):
-            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INSURANCE),
-                                 response_format=InsuranceInquiryResult).invoke(state)
+        def inquiry_node(state: WorkflowState):
+            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INQUIRY),
+                                 response_format=InquiryResult).invoke(state)
 
             return {"response": pydash.get(state, "structured_response.response"),
                     "messages": pydash.get(state, "messages")}
 
         graph_builder = StateGraph(WorkflowState)
-        graph_builder.add_node(STR_NODE_INGEST, ingest_node)
-        graph_builder.add_node(STR_NODE_INSURANCE, insurance_inquiry_node)
+        graph_builder.add_node(STR_NODE_INTENT_CHECK, intent_check_node)
+        graph_builder.add_node(STR_NODE_INQUIRY, inquiry_node)
         graph_builder.add_node(STR_NODE_UNHANDLED, unhandled_response_node)
 
-        graph_builder.add_edge(START, STR_NODE_INGEST)
+        graph_builder.add_edge(START, STR_NODE_INTENT_CHECK)
 
-        graph_builder.add_conditional_edges(STR_NODE_INGEST, ingest_router, {True: STR_NODE_INSURANCE, False: STR_NODE_UNHANDLED})
+        graph_builder.add_conditional_edges(STR_NODE_INTENT_CHECK, ingest_router, {True: STR_NODE_INQUIRY, False: STR_NODE_UNHANDLED})
 
-        graph_builder.add_edge(STR_NODE_INSURANCE, END)
+        graph_builder.add_edge(STR_NODE_INQUIRY, END)
         graph_builder.add_edge(STR_NODE_UNHANDLED, END)
 
         self.workflow = graph_builder.compile(checkpointer=InMemorySaver())
