@@ -18,7 +18,7 @@ Every graph node SHALL be implemented as a class with dependencies received in `
 
 #### Scenario: Node with no dependencies
 
-- **WHEN** a node (e.g., unhandled response) requires no external dependencies
+- **WHEN** a node (e.g., fallback response) requires no external dependencies
 - **THEN** it MUST still be implemented as a class conforming to the `(state, config) -> dict` contract
 
 #### Scenario: LangGraph invokes node with config
@@ -30,12 +30,13 @@ Every graph node SHALL be implemented as a class with dependencies received in `
 
 Graph nodes SHALL be organized into sub-packages under `src/muggle/core/` grouped by pipeline stage:
 
-| Stage    | Sub-package | Nodes                    |
-|----------|-------------|--------------------------|
-| Guard    | `guard/`    | intent_check, unhandled  |
-| Memory   | `memory/`   | summarize                |
-| Search   | `search/`   | query_rewrite, retrieval |
-| Response | `response/` | inquiry                  |
+| Stage       | Sub-package | Nodes                              |
+|-------------|-------------|------------------------------------|
+| Guard       | `guard/`    | intent_check, fallback             |
+| Memory      | `memory/`   | summarize                          |
+| Search      | `search/`   | query_rewrite, retrieval           |
+| Response    | `response/` | inquiry                            |
+| Validation  | (root)      | validation                         |
 
 Each sub-package MUST be a valid Python package containing an `__init__.py` and MAY export its node class(es).
 

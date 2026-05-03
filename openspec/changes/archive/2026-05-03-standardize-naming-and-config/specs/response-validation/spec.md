@@ -1,10 +1,4 @@
-# Capability: response-validation
-
-## Purpose
-
-Defines the validation gate that scores InquiryNode output against quality criteria and implements automatic retry with loopback on failure.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Inquiry Response Validation
 
@@ -13,7 +7,7 @@ The system SHALL validate every InquiryNode response using LLM-based structured 
 #### Scenario: Validation passes
 
 - **WHEN** the ValidationNode evaluates an Inquiry response
-- **AND** the LLM returns `decision: true` (score ≥ configured threshold)
+- **AND** the LLM returns `decision: true` (score >= configured threshold)
 - **THEN** the graph SHALL route to END with the response unchanged
 
 #### Scenario: Validation fails with attempts remaining
