@@ -48,3 +48,10 @@ The `GraphProcessor` SHALL maintain the history of the conversation across multi
 #### Scenario: Multi-turn recall
 - **WHEN** a user sends multiple messages within the same `thread_id` (e.g., "Hi, I'm Bob" followed by "What is my name?")
 - **THEN** the LLM successfully recalls information from the previous messages (e.g., responds "Bob").
+
+### Requirement: Robust Processor Initialization
+The `GraphProcessor` SHALL validate its configuration during initialization (warmup) to ensure all required components (like models) are correctly defined.
+
+#### Scenario: Validation of missing models during warmup
+- **WHEN** the processor is warmed up with a missing model
+- **THEN** it SHALL still raise a ValueError (delegated to the registry).
