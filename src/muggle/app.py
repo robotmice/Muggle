@@ -4,7 +4,7 @@ import pydash
 from flask import Flask, send_from_directory
 
 from muggle.blueprints import register_blueprints
-from muggle.experimental.graph_processor import GraphProcessor
+from muggle.core.graph_processor import GraphProcessor
 from muggle.infra.config import cfg
 from muggle.infra.registry import ModelRegistry, PromptRegistry
 from muggle.shared.constants import STR_LLM_DEFAULT
@@ -56,7 +56,7 @@ def setup_components(app: Flask):
     try:
         processor.warm_up()
     except Exception as e:
-        app.logger.error(f"Failed to warm up ChatProcessor: {e}")
+        app.logger.error(f"Failed to warm up Processor: {e}")
 
     # Attach to app for blueprint access
     setattr(app, 'processor', processor)

@@ -1,59 +1,15 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from muggle.core.processor import ChatProcessor
+from langchain_core.messages import AIMessage
+from muggle.core.graph_processor import GraphProcessor
 from muggle.infra.registry import ModelRegistry, PromptRegistry
-from muggle.shared.constants import STR_LLM_DEFAULT, STR_PROMPT_DEFAULT
+from muggle.shared.constants import STR_LLM_DEFAULT
 
-
-class TestChatProcessor(unittest.TestCase):
-    @patch('muggle.infra.registry.model.init_chat_model')
-    def test_get_response_interface(self, mock_init_model):
-        # Setup mock registries
-        model_registry = ModelRegistry()
-        model_registry.register(
-            STR_LLM_DEFAULT,
-            provider="test-provider",
-            model_id="test-model",
-            temperature=0.5
-        )
-
-        prompt_registry = MagicMock(spec=PromptRegistry)
-        prompt_registry.get_system_prompt.return_value = "System Prompt"
-
-        # Setup mock model
-        mock_model = MagicMock()
-        mock_model.invoke.return_value = MagicMock(content="Mocked Response")
-        mock_init_model.return_value = mock_model
-
-        # Test
-        processor = ChatProcessor(registry=model_registry, prompt_registry=prompt_registry)
-        processor.warm_up()
-        response = processor.get_response("Hello")
-
-        self.assertEqual(response, "Mocked Response")
-        mock_init_model.assert_called_once_with(
-            model="test-model",
-            model_provider="test-provider",
-            temperature=0.5
-        )
-
-        # Verify prompt injection
-        prompt_registry.get_system_prompt.assert_called_once_with(STR_PROMPT_DEFAULT)
-        mock_model.invoke.assert_called_once_with([
-            ("system", "System Prompt"),
-            ("human", "Hello")
-        ])
-
-        self.assertTrue(processor.is_initialized())
-
-
-from muggle.experimental.graph_processor import GraphProcessor
-from langchain_core.messages import AIMessage, HumanMessage
 
 class TestGraphProcessor(unittest.TestCase):
     @patch('muggle.infra.registry.model.init_chat_model')
-    @patch('muggle.experimental.graph_processor.create_agent')
+    @patch('muggle.core.graph_processor.create_agent')
     def test_multi_turn_memory(self, mock_create_agent, mock_init_model):
         # Setup mock registries
         model_registry = ModelRegistry()
@@ -92,8 +48,6 @@ class TestGraphProcessor(unittest.TestCase):
         self.assertEqual(resp2, "Response 2")
         
         # Verify TURN 2 invocation has HISTORY (should be 3 messages now: H1, A1, H2)
-        # Note: Depending on how intent-check vs inquiry nodes run, it might be more.
-        # But crucially, it should be > 1.
         last_call_state = mock_agent_instance.invoke.call_args_list[-1][0][0]
         self.assertGreater(len(last_call_state.messages), 1)
         

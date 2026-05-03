@@ -9,13 +9,13 @@ def health():
     if not processor:
         return jsonify({
             "status": "unhealthy",
-            "errors": ["ChatProcessor not found in application context"]
+            "errors": ["Processor not found in application context"]
         }), 503
         
     if not processor.is_initialized():
         return jsonify({
             "status": "unhealthy",
-            "errors": [processor.last_error or "ChatProcessor is not initialized"]
+            "errors": [processor.last_error or "Processor is not initialized"]
         }), 503
         
     return jsonify({"status": "healthy"}), 200

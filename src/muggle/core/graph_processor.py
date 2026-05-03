@@ -12,7 +12,7 @@ from langgraph.graph.message import add_messages
 from langgraph.types import StreamMode
 from pydantic import BaseModel, Field
 
-from muggle.core.processor import ProcessorInterface
+from muggle.core import ProcessorInterface
 from muggle.infra.registry import ModelRegistry, PromptRegistry
 from muggle.shared.constants import STR_PROMPT_INTENT_CHECK, STR_LLM_DEFAULT, STR_NODE_INTENT_CHECK, STR_NODE_UNHANDLED, STR_PROMPT_INQUIRY, STR_NODE_INQUIRY
 
@@ -90,11 +90,17 @@ class GraphProcessor(ProcessorInterface):
         self.workflow.get_graph().print_ascii()
 
     def get_response(self, message: str, thread_id: str | None = None, stream_mode: StreamMode | Sequence[StreamMode] | None = None) -> str:
-        for chunk in self.workflow.stream(simple_human_message([message]), config=config_map(thread_id), stream_mode=stream_mode):
-            pprint(chunk)
+        try:
+            for chunk in self.workflow.stream(simple_human_message([message]), config=config_map(thread_id), stream_mode=stream_mode):
+                pprint(chunk)
 
-        state = self.workflow.get_state(config=config_map(thread_id))
-        return pydash.get(state.values, "response", "")
+            state = self.workflow.get_state(config=config_map(thread_id))
+            return pydash.get(state.values, "response", "")
+        except Exception as e:
+            from muggle.core.exceptions import PromptNotFoundError
+            if isinstance(e, PromptNotFoundError):
+                return "Error: LLM configuration incomplete (required prompt missing)."
+            return f"Error connecting to LLM: {str(e)}"
 
     def warm_up(self):
         """Perform internal initialization and validation."""
