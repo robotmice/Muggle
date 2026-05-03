@@ -1,7 +1,8 @@
 from typing import Annotated, Sequence
 
+import pydash
 from langchain.agents import create_agent
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import StateGraph
@@ -54,9 +55,10 @@ class GraphProcessor(ProcessorInterface):
 
     def get_response(self, message: str, thread_id: str | None = None, stream_mode: StreamMode | Sequence[StreamMode] | None = None) -> str:
         last_msg = None
-        for msg in self.workflow.stream(simple_human_message([message]), config=config_map(thread_id), stream_mode=stream_mode):
-            print(msg)
-            last_msg = msg
+        for chunk in self.workflow.stream(simple_human_message([message]), config=config_map(thread_id), stream_mode=stream_mode):
+            print(chunk)
+            if isinstance(chunk, AIMessage | ToolMessage):
+                last_msg = chunk
             if self._last_error is None:
-                self._last_error = msg
-        return last_msg
+                self._last_error = chunk
+        return pydash.get(last_msg, "content", "")
