@@ -7,7 +7,6 @@ authors = [
 ]
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "ragas>=0.4.3,<0.5.0",
     "scikit-learn>=1.8.0,<2.0.0",
     "langchain>=1.2.15,<2.0.0",
     "langgraph>=1.1.10,<2.0.0",
@@ -31,16 +30,15 @@ dependencies = [
 
 [project.scripts]
 muggle = "muggle.app:run"
+load-faq = "muggle.infra.loaders.faq_loader:run_loader"
 
 [tool.poetry]
-packages = [{include = "muggle", from = "src"}]
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^9.0.3"
+packages = [{ include = "muggle", from = "src" }]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0.0,<9.0.0"
+    "ragas>=0.4.3,<0.5.0",
+    "pytest>=9.0.0,<10.0.0"
 ]
 
 [build-system]
