@@ -49,13 +49,25 @@
             userInput.disabled = true;
             sendBtn.disabled = true;
 
+            // Get thread_id from sessionStorage
+            const threadId = sessionStorage.getItem('muggle_thread_id');
+
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
+                    body: JSON.stringify({ 
+                        message: text,
+                        thread_id: threadId
+                    })
                 });
                 const data = await response.json();
+                
+                // Save thread_id if returned
+                if (data.thread_id) {
+                    sessionStorage.setItem('muggle_thread_id', data.thread_id);
+                }
+
                 if (data.response) {
                     appendMessage('llm', data.response);
                 } else {
