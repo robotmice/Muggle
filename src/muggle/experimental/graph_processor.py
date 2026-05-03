@@ -18,7 +18,7 @@ from muggle.shared.constants import STR_PROMPT_INTENT_CHECK, STR_LLM_DEFAULT, ST
 
 
 class WorkflowState(BaseModel):
-    messages: Annotated[list, add_messages, Field(default_factory=list)]
+    messages: Annotated[list, add_messages] = Field(default_factory=list)
     pass_intent_check: Annotated[bool, Field(description="")] = False
     response: Annotated[str | None, Field(description="Response to the inquiry")] = None
 
