@@ -1,20 +1,22 @@
 import os
 import tomllib
 from pathlib import Path
+
 from dotenv import load_dotenv
+
 
 class ConfigManager:
     def __init__(self, config_path: str = "config.toml"):
         self.config_path = Path(config_path)
         # Load environment variables from .env
         load_dotenv()
-        
+
         self.config = self._load_config()
 
     def _load_config(self) -> dict:
         if not self.config_path.exists():
             return {}
-        
+
         with open(self.config_path, "rb") as f:
             return tomllib.load(f)
 
@@ -53,6 +55,25 @@ class ConfigManager:
             "uri": os.getenv("MILVUS_URI"),
             "token": os.getenv("MILVUS_TOKEN"),
         }
+
+    def get_rerank_params(self) -> dict:
+        """Retrieve rerank settings from the config file."""
+        rerank_config = self.config.get("rerank", {})
+        return {
+            "top_n": rerank_config.get("top_n", 3),
+            "relevance_threshold": rerank_config.get("relevance_threshold", 0.1),
+            "recall_limit": rerank_config.get("recall_limit", 15),
+        }
+
+    def get_memory_params(self) -> dict:
+        """Retrieve memory settings from the config file."""
+        memory_config = self.config.get("memory", {})
+        return {
+            "max_tokens": memory_config.get("max_tokens", 1024),
+            "max_tokens_before_summary": memory_config.get("max_tokens_before_summary", 4096),
+            "max_summary_tokens": memory_config.get("max_summary_tokens", 256),
+        }
+
 
 # Global instance for easy access
 cfg = ConfigManager()

@@ -11,6 +11,7 @@ STR_NODE_QUERY_REWRITE = "node-query-rewrite"
 STR_PROMPT_QUERY_REWRITE = "prompt-query-rewrite"
 
 STR_NODE_RETRIEVAL = "node-retrieval"
+STR_NODE_SUMMARIZE = "node-summarize"
 
 STR_NODE_VALIDATE = "node-validate"
 STR_PROMPT_VALIDATE = "prompt-validate"
