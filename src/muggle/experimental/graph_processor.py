@@ -19,12 +19,12 @@ from muggle.shared.constants import STR_PROMPT_INGEST, STR_LLM_DEFAULT, STR_NODE
 
 class WorkflowState(BaseModel):
     messages: Annotated[list, add_messages, Field(default_factory=list)]
-    type: Annotated[str | None, Field(description="")] = None
+    is_insurance_related_inquiry: Annotated[bool, Field(description="")] = False
     response: Annotated[str | None, Field(description="Response of the inquiry")] = None
 
 
 class IngestResult(BaseModel):
-    type: Annotated[str | None, Field(description="Result of the analysis")] = None
+    is_insurance_related_inquiry: Annotated[bool, Field(description="Result of the analysis")] = False
 
 
 class InsuranceInquiryResult(BaseModel):
@@ -43,11 +43,8 @@ def config_map(thread_id: str | None = None) -> RunnableConfig:
     )
 
 
-def ingest_router(state: WorkflowState) -> str:
-    if state.type == "insurance":
-        return STR_NODE_INSURANCE
-    else:
-        return STR_NODE_UNHANDLED
+def ingest_router(state: WorkflowState) -> bool:
+    return state.is_insurance_related_inquiry
 
 
 def unhandled_response_node(state: WorkflowState):
@@ -67,7 +64,7 @@ class GraphProcessor(ProcessorInterface):
             state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INGEST),
                                  response_format=IngestResult).invoke(state)
 
-            return {"type": pydash.get(state, "structured_response.type"),
+            return {"is_insurance_related_inquiry": pydash.get(state, "structured_response.is_insurance_related_inquiry"),
                     "messages": pydash.get(state, "messages")}
 
         def insurance_inquiry_node(state: WorkflowState):
@@ -84,7 +81,7 @@ class GraphProcessor(ProcessorInterface):
 
         graph_builder.add_edge(START, STR_NODE_INGEST)
 
-        graph_builder.add_conditional_edges(STR_NODE_INGEST, ingest_router, [STR_NODE_INSURANCE, STR_NODE_UNHANDLED])
+        graph_builder.add_conditional_edges(STR_NODE_INGEST, ingest_router, {True: STR_NODE_INSURANCE, False: STR_NODE_UNHANDLED})
 
         graph_builder.add_edge(STR_NODE_INSURANCE, END)
         graph_builder.add_edge(STR_NODE_UNHANDLED, END)
