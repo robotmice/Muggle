@@ -1,9 +1,10 @@
 from pathlib import Path
 
+import pydash
 from flask import Flask, send_from_directory
 
 from muggle.blueprints import register_blueprints
-from muggle.core.processor import ChatProcessor
+from muggle.experimental.graph_processor import GraphProcessor
 from muggle.infra.config import cfg
 from muggle.infra.registry import ModelRegistry, PromptRegistry
 from muggle.shared.constants import STR_LLM_DEFAULT
@@ -31,14 +32,9 @@ def setup_components(app):
     """Initialize and attach core components to the Flask app."""
     # Initialize Registries
     model_registry = ModelRegistry()
-    
-    prompt_params = cfg.get_prompts_params()
-    prompt_path = Path(prompt_params["path"])
-    if not prompt_path.exists():
-        prompt_path = None
-        
-    prompt_registry = PromptRegistry(prompts_dir=prompt_path)
-    
+
+    prompt_registry = PromptRegistry(prompts_dir=pydash.get(cfg.get_prompts_params(), "path"))
+
     # Register models from config
     llm_params = cfg.get_llm_params()
     model_registry.register(
@@ -50,10 +46,10 @@ def setup_components(app):
     )
 
     # Initialize Processor
-    processor = ChatProcessor(
+    processor = GraphProcessor(
         registry=model_registry,
         prompt_registry=prompt_registry,
-        model_alias=STR_LLM_DEFAULT
+        default_model=STR_LLM_DEFAULT
     )
 
     # Warm up (Graceful Startup)
