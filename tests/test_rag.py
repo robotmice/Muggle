@@ -1,13 +1,20 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from langchain_core.messages import AIMessage, HumanMessage
-from muggle.core.graph_processor import GraphProcessor, WorkflowState, IntentCheckResult, InquiryResult, QueryRewriteResult
+from langchain_core.documents import Document
+
+from muggle.core.graph_processor import GraphProcessor
+from muggle.core.state import WorkflowState
+from muggle.core.guard import IntentCheckResult
+from muggle.core.response import InquiryResult
+from muggle.core.search import QueryRewriteResult
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 
 class TestRAGFlow(unittest.TestCase):
+    @patch('muggle.core.graph_processor.DashScopeRerank')
     @patch('muggle.infra.registry.model.init_chat_model')
-    def test_full_rag_pipeline(self, mock_init_model):
+    def test_full_rag_pipeline(self, mock_init_model, mock_reranker_cls):
         # 1. Setup Mock Registries
         model_registry = ModelRegistry()
         model_registry.register(STR_LLM_DEFAULT, provider="test", model_id="test", temperature=0)
@@ -35,6 +42,13 @@ class TestRAGFlow(unittest.TestCase):
             InquiryResult(response="Final grounded answer")
         ]
         
+        # 2.5 Setup Mock Reranker — returns docs with relevance_score ≥ threshold
+        mock_reranker = MagicMock()
+        mock_reranker.compress_documents.return_value = [
+            Document(page_content="Test Content", metadata={"header": "Test Header", "is_segment": False, "relevance_score": 0.9})
+        ]
+        mock_reranker_cls.return_value = mock_reranker
+
         # 3. Initialize Processor
         processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
         processor.warm_up()
@@ -45,8 +59,10 @@ class TestRAGFlow(unittest.TestCase):
         # 5. Assertions
         self.assertEqual(response, "Final grounded answer")
         
-        # Verify Vector Store was called with rewritten query
-        vector_store.search.assert_called_once_with(query_text="rewritten query")
+        # Verify Vector Store was called with rewritten query (dual-vector search)
+        self.assertEqual(vector_store.search.call_count, 2)
+        vector_store.search.assert_any_call(query_text="rewritten query", vector_field="content_vector", limit=15)
+        vector_store.search.assert_any_call(query_text="rewritten query", vector_field="header_vector", limit=15)
         
         # Verify Inquiry prompt was rendered with context
         inquiry_call = prompt_registry.get_system_prompt.call_args_list[-1]
