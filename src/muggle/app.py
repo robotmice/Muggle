@@ -23,12 +23,12 @@ def create_app():
     # 3. Static routes
     @app.route('/')
     def index():
-        return send_from_directory(app.static_folder, 'index.html')
+        return send_from_directory(static_folder, 'index.html')
 
     return app
 
 
-def setup_components(app):
+def setup_components(app: Flask):
     """Initialize and attach core components to the Flask app."""
     # Initialize Registries
     model_registry = ModelRegistry()
@@ -59,9 +59,9 @@ def setup_components(app):
         app.logger.error(f"Failed to warm up ChatProcessor: {e}")
 
     # Attach to app for blueprint access
-    app.processor = processor
-    app.model_registry = model_registry
-    app.prompt_registry = prompt_registry
+    setattr(app, 'processor', processor)
+    setattr(app, 'model_registry', model_registry)
+    setattr(app, 'prompt_registry', prompt_registry)
 
 
 def run():
