@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class ProcessorInterface(ABC):
     @abstractmethod
-    def get_response(self, message: str) -> str:
+    def get_response(self, message: str, thread_id: str | None = None) -> str:
         """Process a message and return a response."""
         pass
 
@@ -47,7 +47,8 @@ class ChatProcessor(ProcessorInterface):
             self._last_error = str(e)
             raise e
 
-    def get_response(self, message: str) -> str:
+    def get_response(self, message: str, thread_id: str | None = None) -> str:
+        _ = thread_id  # Currently stateless
         try:
             model = self.registry.get_model(self.default_model)
 
