@@ -16,10 +16,10 @@ class ProcessorInterface(ABC):
 
 
 class ChatProcessor(ProcessorInterface):
-    def __init__(self, registry: ModelRegistry, prompt_registry: PromptRegistry, model_alias: str = STR_LLM_DEFAULT):
+    def __init__(self, registry: ModelRegistry, prompt_registry: PromptRegistry, default_model: str = STR_LLM_DEFAULT):
         self.registry = registry
         self.prompt_registry = prompt_registry
-        self.model_alias = model_alias
+        self.default_model = default_model
         self._ready = False
         self._last_error = None
 
@@ -34,11 +34,11 @@ class ChatProcessor(ProcessorInterface):
     def warm_up(self):
         """Perform internal initialization and validation."""
         try:
-            if not self.registry.is_registered(self.model_alias):
-                raise ValueError(f"Model alias '{self.model_alias}' is not registered in the ModelRegistry.")
+            if not self.registry.is_registered(self.default_model):
+                raise ValueError(f"Model '{self.default_model}' is not registered in the ModelRegistry.")
 
             # Trigger lazy loading/instantiation
-            self.registry.get_model(self.model_alias)
+            self.registry.get_model(self.default_model)
 
             self._ready = True
             self._last_error = None
@@ -49,7 +49,7 @@ class ChatProcessor(ProcessorInterface):
 
     def get_response(self, message: str) -> str:
         try:
-            model = self.registry.get_model(self.model_alias)
+            model = self.registry.get_model(self.default_model)
 
             try:
                 system_prompt = self.prompt_registry.get_system_prompt(STR_PROMPT_DEFAULT)
