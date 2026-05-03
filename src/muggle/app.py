@@ -6,7 +6,7 @@ from flask import Flask, send_from_directory
 from muggle.blueprints import register_blueprints
 from muggle.core.graph_processor import GraphProcessor
 from muggle.infra.config import cfg
-from muggle.infra.registry import ModelRegistry, PromptRegistry
+from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 
 
@@ -32,6 +32,7 @@ def setup_components(app: Flask):
     """Initialize and attach core components to the Flask app."""
     # Initialize Registries
     model_registry = ModelRegistry()
+    vector_store = VectorStoreManager()
 
     prompt_registry = PromptRegistry(prompts_dir=pydash.get(cfg.get_prompts_params(), "path"))
 
@@ -49,6 +50,7 @@ def setup_components(app: Flask):
     processor = GraphProcessor(
         registry=model_registry,
         prompt_registry=prompt_registry,
+        vector_store=vector_store,
         default_model=STR_LLM_DEFAULT
     )
 

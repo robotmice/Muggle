@@ -13,13 +13,15 @@ from langgraph.types import StreamMode
 from pydantic import BaseModel, Field
 
 from muggle.core import ProcessorInterface
-from muggle.infra.registry import ModelRegistry, PromptRegistry
-from muggle.shared.constants import STR_PROMPT_INTENT_CHECK, STR_LLM_DEFAULT, STR_NODE_INTENT_CHECK, STR_NODE_UNHANDLED, STR_PROMPT_INQUIRY, STR_NODE_INQUIRY
+from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
+from muggle.shared.constants import STR_PROMPT_INTENT_CHECK, STR_LLM_DEFAULT, STR_NODE_INTENT_CHECK, STR_NODE_UNHANDLED, STR_PROMPT_INQUIRY, STR_NODE_INQUIRY, STR_NODE_QUERY_REWRITE, STR_PROMPT_QUERY_REWRITE, STR_NODE_RETRIEVAL
 
 
 class WorkflowState(BaseModel):
     messages: Annotated[list, add_messages] = Field(default_factory=list)
     pass_intent_check: bool = Field(False)
+    vector_store_query: str | None = Field(None, description="Rewritten query for vector store")
+    context: list[dict] = Field(default_factory=list, description="Retrieved context from vector store")
     response: str | None = Field(None, description="Response to the inquiry")
 
 
@@ -29,6 +31,10 @@ class IntentCheckResult(BaseModel):
 
 class InquiryResult(BaseModel):
     response: str | None = Field(None, description="Response to the inquiry")
+
+
+class QueryRewriteResult(BaseModel):
+    vector_store_query: str = Field(..., description="The rewritten query for vector search")
 
 
 def simple_human_message(messages: list[str]):
@@ -53,9 +59,10 @@ def unhandled_response_node(state: WorkflowState):
 
 
 class GraphProcessor(ProcessorInterface):
-    def __init__(self, registry: ModelRegistry, prompt_registry: PromptRegistry, default_model: str = STR_LLM_DEFAULT):
+    def __init__(self, registry: ModelRegistry, prompt_registry: PromptRegistry, vector_store: VectorStoreManager, default_model: str = STR_LLM_DEFAULT):
         self.registry = registry
         self.prompt_registry = prompt_registry
+        self.vector_store = vector_store
         self.default_model = default_model
         self._ready = False
         self._last_error = None
@@ -68,20 +75,44 @@ class GraphProcessor(ProcessorInterface):
                     "messages": pydash.get(state, "messages")}
 
         def inquiry_node(state: WorkflowState):
-            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INQUIRY),
+            # Format context for the prompt
+            context_str = ""
+            if state.context:
+                context_str = "\n\n".join([f"### {d['header']}\n{d['text']}" for d in state.context])
+
+            system_prompt = prompt_registry.get_system_prompt(STR_PROMPT_INQUIRY, variables={"context": context_str})
+            state = create_agent(model=registry.get_model(default_model), system_prompt=system_prompt,
                                  response_format=InquiryResult).invoke(state)
 
             return {"response": pydash.get(state, "structured_response.response"),
                     "messages": pydash.get(state, "messages")}
 
+        def query_rewrite_node(state: WorkflowState):
+            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_QUERY_REWRITE),
+                                 response_format=QueryRewriteResult).invoke(state)
+
+            return {"vector_store_query": pydash.get(state, "structured_response.vector_store_query")}
+
+        def retrieval_node(state: WorkflowState):
+            query = state.vector_store_query
+            if not query:
+                return {"context": []}
+
+            results = self.vector_store.search(query_text=query)
+            return {"context": results}
+
         graph_builder = StateGraph(WorkflowState)
         graph_builder.add_node(STR_NODE_INTENT_CHECK, intent_check_node)
+        graph_builder.add_node(STR_NODE_QUERY_REWRITE, query_rewrite_node)
+        graph_builder.add_node(STR_NODE_RETRIEVAL, retrieval_node)
         graph_builder.add_node(STR_NODE_INQUIRY, inquiry_node)
         graph_builder.add_node(STR_NODE_UNHANDLED, unhandled_response_node)
 
         graph_builder.add_edge(START, STR_NODE_INTENT_CHECK)
 
-        graph_builder.add_conditional_edges(STR_NODE_INTENT_CHECK, ingest_router, {True: STR_NODE_INQUIRY, False: STR_NODE_UNHANDLED})
+        graph_builder.add_conditional_edges(STR_NODE_INTENT_CHECK, ingest_router, {True: STR_NODE_QUERY_REWRITE, False: STR_NODE_UNHANDLED})
+        graph_builder.add_edge(STR_NODE_QUERY_REWRITE, STR_NODE_RETRIEVAL)
+        graph_builder.add_edge(STR_NODE_RETRIEVAL, STR_NODE_INQUIRY)
 
         graph_builder.add_edge(STR_NODE_INQUIRY, END)
         graph_builder.add_edge(STR_NODE_UNHANDLED, END)
