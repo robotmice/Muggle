@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.messages import AIMessage
 from muggle.core.graph_processor import GraphProcessor
-from muggle.infra.registry import ModelRegistry, PromptRegistry
+from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 
 
@@ -24,11 +24,13 @@ class TestGraphProcessor(unittest.TestCase):
         
         # Turn 1
         mock_agent_instance.invoke.return_value = {
-            "structured_response": {"pass_intent_check": True, "response": "Response 1"},
+            "structured_response": {"pass_intent_check": True, "response": "Response 1", "vector_store_query": "Query 1"},
             "messages": [AIMessage(content="Response 1")]
         }
         
-        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry)
+        vector_store = MagicMock(spec=VectorStoreManager)
+        vector_store.search.return_value = []
+        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
         processor.warm_up()
         
         resp1 = processor.get_response("Turn 1", thread_id="t1")
@@ -40,7 +42,7 @@ class TestGraphProcessor(unittest.TestCase):
         
         # Turn 2
         mock_agent_instance.invoke.return_value = {
-            "structured_response": {"pass_intent_check": True, "response": "Response 2"},
+            "structured_response": {"pass_intent_check": True, "response": "Response 2", "vector_store_query": "Query 2"},
             "messages": [AIMessage(content="Response 2")]
         }
         
