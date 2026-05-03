@@ -105,9 +105,6 @@ class GraphProcessor(ProcessorInterface):
     def warm_up(self):
         """Perform internal initialization and validation."""
         try:
-            if not self.registry.is_registered(self.default_model):
-                raise ValueError(f"Model '{self.default_model}' is not registered in the ModelRegistry.")
-
             # Trigger lazy loading/instantiation
             self.registry.get_model(self.default_model)
 
