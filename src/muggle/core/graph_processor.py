@@ -13,14 +13,15 @@ from muggle.core import ProcessorInterface
 from muggle.core.guard import IntentCheckNode, UnhandledNode
 from muggle.core.response import InquiryNode
 from muggle.core.search import QueryRewriteNode, RetrievalNode
-from muggle.core.state import WorkflowState, ingest_router, simple_human_message, config_map
+from muggle.core.state import WorkflowState, ingest_router, validation_router, simple_human_message, config_map
+from muggle.core.validate import ValidateNode
 from muggle.infra.config import cfg
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import (
     STR_LLM_DEFAULT,
     STR_NODE_INTENT_CHECK, STR_NODE_UNHANDLED,
     STR_NODE_INQUIRY, STR_NODE_QUERY_REWRITE,
-    STR_NODE_RETRIEVAL, STR_NODE_SUMMARIZE,
+    STR_NODE_RETRIEVAL, STR_NODE_SUMMARIZE, STR_NODE_VALIDATE,
 )
 
 
@@ -36,6 +37,7 @@ class GraphProcessor(ProcessorInterface):
 
         rerank_params = cfg.get_rerank_params()
         memory_params = cfg.get_memory_params()
+        validate_params = cfg.get_validate_params()
 
         # -- nodes --
         intent_check = IntentCheckNode(model, prompt_registry)
@@ -55,6 +57,7 @@ class GraphProcessor(ProcessorInterface):
             relevance_threshold=rerank_params["relevance_threshold"],
         )
         inquiry = InquiryNode(model, prompt_registry)
+        validate = ValidateNode(model, prompt_registry, threshold=validate_params["threshold"])
         unhandled = UnhandledNode()
 
         # -- graph --
@@ -64,6 +67,7 @@ class GraphProcessor(ProcessorInterface):
         builder.add_node(STR_NODE_QUERY_REWRITE, query_rewrite)
         builder.add_node(STR_NODE_RETRIEVAL, retrieval)
         builder.add_node(STR_NODE_INQUIRY, inquiry)
+        builder.add_node(STR_NODE_VALIDATE, validate)
         builder.add_node(STR_NODE_UNHANDLED, unhandled)
 
         builder.add_edge(START, STR_NODE_INTENT_CHECK)
@@ -73,7 +77,12 @@ class GraphProcessor(ProcessorInterface):
         builder.add_edge(STR_NODE_SUMMARIZE, STR_NODE_QUERY_REWRITE)
         builder.add_edge(STR_NODE_QUERY_REWRITE, STR_NODE_RETRIEVAL)
         builder.add_edge(STR_NODE_RETRIEVAL, STR_NODE_INQUIRY)
-        builder.add_edge(STR_NODE_INQUIRY, END)
+        builder.add_edge(STR_NODE_INQUIRY, STR_NODE_VALIDATE)
+        builder.add_conditional_edges(STR_NODE_VALIDATE, validation_router, {
+            END: END,
+            STR_NODE_UNHANDLED: STR_NODE_UNHANDLED,
+            STR_NODE_SUMMARIZE: STR_NODE_SUMMARIZE,
+        })
         builder.add_edge(STR_NODE_UNHANDLED, END)
 
         self.workflow = builder.compile(checkpointer=InMemorySaver())

@@ -74,6 +74,13 @@ class ConfigManager:
             "max_summary_tokens": memory_config.get("max_summary_tokens", 256),
         }
 
+    def get_validate_params(self) -> dict:
+        """Retrieve validation settings from the config file."""
+        validate_config = self.config.get("validate", {})
+        return {
+            "threshold": validate_config.get("threshold", 0.8),
+        }
+
 
 # Global instance for easy access
 cfg = ConfigManager()

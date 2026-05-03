@@ -8,6 +8,7 @@ from muggle.core.state import WorkflowState
 from muggle.core.guard import IntentCheckResult
 from muggle.core.response import InquiryResult
 from muggle.core.search import QueryRewriteResult
+from muggle.core.validate import ValidationResult
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 
@@ -32,14 +33,16 @@ class TestRAGFlow(unittest.TestCase):
         mock_structured_model = MagicMock()
         mock_model.with_structured_output.return_value = mock_structured_model
         
-        # Sequence of LLM responses: Intent Check -> Query Rewrite -> Inquiry
+        # Sequence of LLM responses: Intent Check -> Query Rewrite -> Inquiry -> Validate
         mock_structured_model.invoke.side_effect = [
             # 1. Intent Check
             IntentCheckResult(pass_intent_check=True),
             # 2. Query Rewrite
             QueryRewriteResult(vector_store_query="rewritten query"),
             # 3. Inquiry
-            InquiryResult(response="Final grounded answer")
+            InquiryResult(response="Final grounded answer"),
+            # 4. Validate
+            ValidationResult(pass_validation=True),
         ]
         
         # 2.5 Setup Mock Reranker — returns docs with relevance_score ≥ threshold
@@ -63,8 +66,8 @@ class TestRAGFlow(unittest.TestCase):
         vector_store.search.assert_any_call(query_text="rewritten query", vector_field="content_vector", limit=15)
         vector_store.search.assert_any_call(query_text="rewritten query", vector_field="header_vector", limit=15)
         
-        # Verify Inquiry prompt was rendered with context
-        inquiry_call = prompt_registry.get_system_prompt.call_args_list[-1]
+        # Verify Inquiry prompt was rendered with context (second-to-last call; last is validate)
+        inquiry_call = prompt_registry.get_system_prompt.call_args_list[-2]
         self.assertIn("Test Header", inquiry_call[1]["variables"]["context"])
         self.assertIn("Test Content", inquiry_call[1]["variables"]["context"])
 

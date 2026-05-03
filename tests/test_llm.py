@@ -6,6 +6,7 @@ from muggle.core.graph_processor import GraphProcessor
 from muggle.core.guard import IntentCheckResult
 from muggle.core.response import InquiryResult
 from muggle.core.search import QueryRewriteResult
+from muggle.core.validate import ValidationResult
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 
@@ -32,9 +33,11 @@ class TestGraphProcessor(unittest.TestCase):
             IntentCheckResult(pass_intent_check=True),
             QueryRewriteResult(vector_store_query="Query 1"),
             InquiryResult(response="Response 1"),
+            ValidationResult(pass_validation=True),
             IntentCheckResult(pass_intent_check=True),
             QueryRewriteResult(vector_store_query="Query 2"),
-            InquiryResult(response="Response 2")
+            InquiryResult(response="Response 2"),
+            ValidationResult(pass_validation=True),
         ]
         mock_structured_model.invoke.side_effect = results
         
@@ -57,9 +60,10 @@ class TestGraphProcessor(unittest.TestCase):
         self.assertEqual(resp2, "Response 2")
         
         # Verify TURN 2 invocation has HISTORY
-        # Last call is inquiry_node of Turn 2.
+        # Second-to-last structured output call is inquiry_node of Turn 2 (last is validate).
         # Messages should be: System, Human 1, AI 1, Human 2
-        last_call_msgs = mock_structured_model.invoke.call_args_list[-1][0][0]
+        inquiry_call_index = -2
+        last_call_msgs = mock_structured_model.invoke.call_args_list[inquiry_call_index][0][0]
         self.assertEqual(len(last_call_msgs), 4)
         
         contents = [m.content for m in last_call_msgs]
