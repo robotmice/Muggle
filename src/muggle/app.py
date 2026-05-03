@@ -71,7 +71,8 @@ def run():
     app.run(
         host=server_params["host"],
         port=server_params["port"],
-        debug=server_params["debug"]
+        debug=server_params["debug"],
+        use_reloader=False
     )
 
 
