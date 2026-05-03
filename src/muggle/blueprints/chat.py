@@ -13,7 +13,7 @@ def chat():
     # Retrieve the processor from current_app
     processor = getattr(current_app, 'processor', None)
     if not processor:
-        return jsonify({"error": "AI Processor not initialized"}), 500
+        return jsonify({"error": "LLM Processor not initialized"}), 500
         
     response_text = processor.get_response(user_message)
     

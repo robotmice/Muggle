@@ -51,7 +51,7 @@ class ChatProcessor(ProcessorInterface):
                 system_prompt = self.prompt_registry.get_system_prompt("default")
             except PromptNotFoundError as e:
                 logger.error(f"Required prompt missing: {e}")
-                return "Error: AI configuration incomplete (system prompt missing)."
+                return "Error: LLM configuration incomplete (system prompt missing)."
 
             messages = [
                 ("system", system_prompt),
@@ -61,4 +61,4 @@ class ChatProcessor(ProcessorInterface):
             response = model.invoke(messages)
             return response.content
         except Exception as e:
-            return f"Error connecting to AI: {str(e)}"
+            return f"Error connecting to LLM: {str(e)}"
