@@ -6,7 +6,7 @@ from muggle.core.graph_processor import GraphProcessor
 from muggle.core.guard import IntentCheckResult
 from muggle.core.response import InquiryResult
 from muggle.core.search import QueryRewriteResult
-from muggle.core.validate import ValidationResult
+from muggle.core.validation import ValidationResult
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 

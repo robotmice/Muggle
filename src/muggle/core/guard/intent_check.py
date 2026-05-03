@@ -20,4 +20,4 @@ class IntentCheckNode:
         system_prompt = self.prompt_registry.get_system_prompt(STR_PROMPT_INTENT_CHECK)
         messages = [SystemMessage(content=system_prompt)] + state.messages
         result = self.model.with_structured_output(IntentCheckResult).invoke(messages)
-        return {"pass_intent_check": result.pass_intent_check, "retry_count": 0}
+        return {"pass_intent_check": result.pass_intent_check, "attempt_count": 0}

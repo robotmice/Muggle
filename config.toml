@@ -28,3 +28,4 @@ max_summary_tokens = 256
 
 [validate]
 threshold = 0.8
+max_attempts = 5

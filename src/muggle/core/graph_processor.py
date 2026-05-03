@@ -10,18 +10,18 @@ from langgraph.types import StreamMode
 from langmem.short_term import SummarizationNode
 
 from muggle.core import ProcessorInterface
-from muggle.core.guard import IntentCheckNode, UnhandledNode
+from muggle.core.guard import IntentCheckNode, FallbackNode
 from muggle.core.response import InquiryNode
 from muggle.core.search import QueryRewriteNode, RetrievalNode
-from muggle.core.state import WorkflowState, ingest_router, validation_router, simple_human_message, config_map
-from muggle.core.validate import ValidateNode
+from muggle.core.state import WorkflowState, ingest_router, ValidationRouter, simple_human_message, config_map
+from muggle.core.validation import ValidationNode
 from muggle.infra.config import cfg
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import (
     STR_LLM_DEFAULT,
-    STR_NODE_INTENT_CHECK, STR_NODE_UNHANDLED,
+    STR_NODE_INTENT_CHECK, STR_NODE_FALLBACK,
     STR_NODE_INQUIRY, STR_NODE_QUERY_REWRITE,
-    STR_NODE_RETRIEVAL, STR_NODE_SUMMARIZE, STR_NODE_VALIDATE,
+    STR_NODE_RETRIEVAL, STR_NODE_SUMMARIZATION, STR_NODE_VALIDATION,
 )
 
 
@@ -57,33 +57,34 @@ class GraphProcessor(ProcessorInterface):
             relevance_threshold=rerank_params["relevance_threshold"],
         )
         inquiry = InquiryNode(model, prompt_registry)
-        validate = ValidateNode(model, prompt_registry, threshold=validate_params["threshold"])
-        unhandled = UnhandledNode()
+        validate = ValidationNode(model, prompt_registry, threshold=validate_params["threshold"])
+        fallback = FallbackNode()
 
         # -- graph --
         builder = StateGraph(WorkflowState)
         builder.add_node(STR_NODE_INTENT_CHECK, intent_check)
-        builder.add_node(STR_NODE_SUMMARIZE, summarize)
+        builder.add_node(STR_NODE_SUMMARIZATION, summarize)
         builder.add_node(STR_NODE_QUERY_REWRITE, query_rewrite)
         builder.add_node(STR_NODE_RETRIEVAL, retrieval)
         builder.add_node(STR_NODE_INQUIRY, inquiry)
-        builder.add_node(STR_NODE_VALIDATE, validate)
-        builder.add_node(STR_NODE_UNHANDLED, unhandled)
+        builder.add_node(STR_NODE_VALIDATION, validate)
+        builder.add_node(STR_NODE_FALLBACK, fallback)
 
         builder.add_edge(START, STR_NODE_INTENT_CHECK)
         builder.add_conditional_edges(STR_NODE_INTENT_CHECK, ingest_router, {
-            True: STR_NODE_SUMMARIZE, False: STR_NODE_UNHANDLED
+            True: STR_NODE_SUMMARIZATION, False: STR_NODE_FALLBACK
         })
-        builder.add_edge(STR_NODE_SUMMARIZE, STR_NODE_QUERY_REWRITE)
+        builder.add_edge(STR_NODE_SUMMARIZATION, STR_NODE_QUERY_REWRITE)
         builder.add_edge(STR_NODE_QUERY_REWRITE, STR_NODE_RETRIEVAL)
         builder.add_edge(STR_NODE_RETRIEVAL, STR_NODE_INQUIRY)
-        builder.add_edge(STR_NODE_INQUIRY, STR_NODE_VALIDATE)
-        builder.add_conditional_edges(STR_NODE_VALIDATE, validation_router, {
+        builder.add_edge(STR_NODE_INQUIRY, STR_NODE_VALIDATION)
+        validation_router = ValidationRouter(max_attempts=validate_params["max_attempts"])
+        builder.add_conditional_edges(STR_NODE_VALIDATION, validation_router, {
             END: END,
-            STR_NODE_UNHANDLED: STR_NODE_UNHANDLED,
-            STR_NODE_SUMMARIZE: STR_NODE_SUMMARIZE,
+            STR_NODE_FALLBACK: STR_NODE_FALLBACK,
+            STR_NODE_SUMMARIZATION: STR_NODE_SUMMARIZATION,
         })
-        builder.add_edge(STR_NODE_UNHANDLED, END)
+        builder.add_edge(STR_NODE_FALLBACK, END)
 
         self.workflow = builder.compile(checkpointer=InMemorySaver())
         self.workflow.get_graph().print_ascii()

@@ -79,6 +79,7 @@ class ConfigManager:
         validate_config = self.config.get("validate", {})
         return {
             "threshold": validate_config.get("threshold", 0.8),
+            "max_attempts": validate_config.get("max_attempts", 5),
         }
 
 

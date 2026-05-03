@@ -1,4 +1,4 @@
 from muggle.core.guard.intent_check import IntentCheckNode, IntentCheckResult
-from muggle.core.guard.unhandled import UnhandledNode
+from muggle.core.guard.fallback import FallbackNode
 
-__all__ = ["IntentCheckNode", "IntentCheckResult", "UnhandledNode"]
+__all__ = ["IntentCheckNode", "IntentCheckResult", "FallbackNode"]
