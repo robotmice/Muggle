@@ -1,16 +1,4 @@
-# Capability: application-lifecycle
-
-## Purpose
-TBD - Defines the lifecycle of the Flask application, including initialization and health monitoring.
-
-## Requirements
-
-### Requirement: Application Factory
-The system SHALL implement an application factory pattern (`create_app`) to initialize the Flask application, configure its state, and register routes/blueprints.
-
-#### Scenario: App Creation
-- **WHEN** the `create_app` function is called
-- **THEN** it SHALL return a configured Flask application instance
+## MODIFIED Requirements
 
 ### Requirement: Health Monitoring
 The application SHALL expose a GET endpoint at `/health` to report the status of the internal application state. This endpoint MUST be defined within a dedicated `monitoring` blueprint.
@@ -23,3 +11,9 @@ The application SHALL expose a GET endpoint at `/health` to report the status of
 - **WHEN** a GET request is received at `/health` AND the processor is not present in the application context
 - **THEN** the system returns a 503 Service Unavailable status with `{ "status": "unhealthy", "errors": [...] }`
 
+## REMOVED Requirements
+
+### Requirement: Graceful Warm-up
+**Reason**: The warm-up probe catches LLM connectivity issues at startup but the server continues running either way (exception is caught and logged). Failing at first request is equivalent behavior with less machinery.
+
+**Migration**: Remove the `try: processor.warm_up() except: log` block from `app.py`. No action needed for callers — the first `/chat` request surfaces LLM connectivity issues directly.
