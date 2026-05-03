@@ -9,4 +9,4 @@ port = 5001
 debug = true
 
 [prompts]
-path = "prompts"
+path = "muggle.infra.prompts"

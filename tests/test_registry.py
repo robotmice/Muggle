@@ -1,5 +1,4 @@
 import unittest
-import os
 import shutil
 from pathlib import Path
 from muggle.shared.utils import parse_frontmatter
@@ -8,11 +7,18 @@ from muggle.core.exceptions import PromptNotFoundError
 
 class TestPromptRegistry(unittest.TestCase):
     def setUp(self):
-        # Create a temporary prompts directory
+        # We need a temporary python package to mock resources.files
         self.test_dir = Path("tests/temp_prompts")
         self.test_dir.mkdir(parents=True, exist_ok=True)
-        (self.test_dir / "system").mkdir(exist_ok=True)
-        (self.test_dir / "user").mkdir(exist_ok=True)
+        (self.test_dir / "__init__.py").touch()
+        
+        system_dir = self.test_dir / "system"
+        system_dir.mkdir(exist_ok=True)
+        (system_dir / "__init__.py").touch()
+        
+        user_dir = self.test_dir / "user"
+        user_dir.mkdir(exist_ok=True)
+        (user_dir / "__init__.py").touch()
 
     def tearDown(self):
         # Cleanup temporary directory
@@ -38,12 +44,12 @@ class TestPromptRegistry(unittest.TestCase):
         with open(prompt_path, "w") as f:
             f.write("Hello {{name}}")
         
-        registry = PromptRegistry(str(self.test_dir))
+        registry = PromptRegistry("tests.temp_prompts")
         result = registry.get_system_prompt("hello", variables={"name": "World"})
         self.assertEqual(result, "Hello World")
 
     def test_registry_missing_prompt(self):
-        registry = PromptRegistry(str(self.test_dir))
+        registry = PromptRegistry("tests.temp_prompts")
         with self.assertRaises(PromptNotFoundError) as cm:
             registry.get_system_prompt("nonexistent")
         
@@ -57,7 +63,7 @@ class TestPromptRegistry(unittest.TestCase):
         with open(prompt_path, "w") as f:
             f.write("{% if True %}TRUE{% endif %}")
         
-        registry = PromptRegistry(str(self.test_dir))
+        registry = PromptRegistry("tests.temp_prompts")
         result = registry.get_user_prompt("logic")
         self.assertEqual(result, "TRUE")
 
@@ -65,7 +71,7 @@ class TestPromptRegistry(unittest.TestCase):
         # We need to point to the actual prompts dir for this or mock it
         # Let's mock it for the unit test
         (self.test_dir / "system" / "example.md").write_text("# CAPACITY\n{{ task_description }}")
-        registry = PromptRegistry(str(self.test_dir))
+        registry = PromptRegistry("tests.temp_prompts")
         result = registry.get_system_prompt("example", variables={"task_description": "Test Task"})
         self.assertIn("Test Task", result)
 
