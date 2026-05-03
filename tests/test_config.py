@@ -12,7 +12,7 @@ class TestConfigManager(unittest.TestCase):
         # Setup mocks
         mock_exists.return_value = True
         mock_toml_load.return_value = {
-            "ai": {
+            "llm": {
                 "provider": "test-provider",
                 "model": "test-model",
                 "temperature": 0.5
@@ -20,7 +20,7 @@ class TestConfigManager(unittest.TestCase):
         }
         
         config = ConfigManager(config_path="dummy.toml")
-        params = config.get_ai_params()
+        params = config.get_llm_params()
         
         self.assertEqual(params["provider"], "test-provider")
         self.assertEqual(params["model"], "test-model")
