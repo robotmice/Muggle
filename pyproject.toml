@@ -35,6 +35,9 @@ load-faq = "muggle.infra.loaders.faq_loader:run_loader"
 [tool.poetry]
 packages = [{ include = "muggle", from = "src" }]
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.3"
+
 [dependency-groups]
 dev = [
     "ragas>=0.4.3,<0.5.0",
