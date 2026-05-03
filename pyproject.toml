@@ -38,6 +38,7 @@ packages = [{ include = "muggle", from = "src" }]
 
 [dependency-groups]
 dev = [
+    "pymupdf>=1.27.2.3,<1.27.3.0",
     "ragas>=0.4.3,<0.5.0",
     "pytest>=9.0.3,<10.0.0"
 ]
