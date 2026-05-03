@@ -43,5 +43,15 @@ class ConfigManager:
             "path": prompts_config.get("path", "prompts"),
         }
 
+    def get_vector_store_params(self) -> dict:
+        """Retrieve vector store settings from config and environment."""
+        vs_config = self.config.get("vector_store", {})
+        return {
+            "collection_name": vs_config.get("collection_name", "muggle_vectors"),
+            "embedding_model": vs_config.get("embedding_model", "text-embedding-v3"),
+            "uri": os.getenv("MILVUS_URI"),
+            "token": os.getenv("MILVUS_TOKEN"),
+        }
+
 # Global instance for easy access
 cfg = ConfigManager()

@@ -10,3 +10,7 @@ debug = true
 
 [prompts]
 path = "muggle.infra.prompts"
+
+[vector_store]
+collection_name = "aia_faq"
+embedding_model = "text-embedding-v3"
