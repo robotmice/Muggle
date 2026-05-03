@@ -29,3 +29,10 @@ The `ChatProcessor` MUST gracefully handle cases where a required prompt is miss
 #### Scenario: Missing system prompt
 - **WHEN** a required system prompt is missing and `PromptNotFoundError` is raised
 - **THEN** the processor MUST log the error and return a user-friendly error message indicating that the LLM configuration is incomplete.
+
+### Requirement: Conversational Memory
+The `GraphProcessor` SHALL maintain the history of the conversation across multiple turns for a given `thread_id`.
+
+#### Scenario: Multi-turn recall
+- **WHEN** a user sends multiple messages within the same `thread_id` (e.g., "Hi, I'm Bob" followed by "What is my name?")
+- **THEN** the LLM successfully recalls information from the previous messages (e.g., responds "Bob").
