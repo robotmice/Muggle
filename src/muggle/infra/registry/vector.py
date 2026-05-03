@@ -14,6 +14,7 @@ class VectorStoreManager:
         self.token = params["token"]
         self.collection_name = params["collection_name"]
         self.embedding_model = params["embedding_model"]
+        self.top_k = params.get("top_k", 3)
         
         # Initialize Milvus Client
         self.client = MilvusClient(uri=self.uri, token=self.token)
@@ -76,7 +77,7 @@ class VectorStoreManager:
     def search(self, 
                query_text: str, 
                vector_field: str = "content_vector", 
-               limit: int = 5,
+               limit: int | None = None,
                filter: str = "") -> List[Dict[str, Any]]:
         """Perform similarity search using query text."""
         query_vector = self.embeddings.embed_query(query_text)
@@ -85,7 +86,7 @@ class VectorStoreManager:
             collection_name=self.collection_name,
             data=[query_vector],
             anns_field=vector_field,
-            limit=limit,
+            limit=limit if limit is not None else self.top_k,
             filter=filter,
             output_fields=["text", "header", "is_segment"]
         )

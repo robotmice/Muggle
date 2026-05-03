@@ -7,6 +7,11 @@ STR_PROMPT_INTENT_CHECK = "prompt-intent-check"
 STR_NODE_INQUIRY = "node-inquiry"
 STR_PROMPT_INQUIRY = "prompt-inquiry"
 
+STR_NODE_QUERY_REWRITE = "node-query-rewrite"
+STR_PROMPT_QUERY_REWRITE = "prompt-query-rewrite"
+
+STR_NODE_RETRIEVAL = "node-retrieval"
+
 STR_NODE_VALIDATE = "node-validate"
 STR_PROMPT_VALIDATE = "prompt-validate"
 

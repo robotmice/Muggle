@@ -49,6 +49,7 @@ class ConfigManager:
         return {
             "collection_name": vs_config.get("collection_name", "muggle_vectors"),
             "embedding_model": vs_config.get("embedding_model", "text-embedding-v3"),
+            "top_k": vs_config.get("top_k", 3),
             "uri": os.getenv("MILVUS_URI"),
             "token": os.getenv("MILVUS_TOKEN"),
         }
