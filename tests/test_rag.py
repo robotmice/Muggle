@@ -1,14 +1,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from langchain_core.messages import AIMessage, HumanMessage
-from muggle.core.graph_processor import GraphProcessor, WorkflowState
+from muggle.core.graph_processor import GraphProcessor, WorkflowState, IntentCheckResult, InquiryResult, QueryRewriteResult
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
 
 class TestRAGFlow(unittest.TestCase):
     @patch('muggle.infra.registry.model.init_chat_model')
-    @patch('muggle.core.graph_processor.create_agent')
-    def test_full_rag_pipeline(self, mock_create_agent, mock_init_model):
+    def test_full_rag_pipeline(self, mock_init_model):
         # 1. Setup Mock Registries
         model_registry = ModelRegistry()
         model_registry.register(STR_LLM_DEFAULT, provider="test", model_id="test", temperature=0)
@@ -19,18 +18,21 @@ class TestRAGFlow(unittest.TestCase):
         vector_store = MagicMock(spec=VectorStoreManager)
         vector_store.search.return_value = [{"header": "Test Header", "text": "Test Content"}]
         
-        # 2. Setup Mock Agent Instances for different nodes
-        mock_agent_instance = MagicMock()
-        mock_create_agent.return_value = mock_agent_instance
+        # 2. Setup Mock Model
+        mock_model = MagicMock()
+        mock_init_model.return_value = mock_model
+        
+        mock_structured_model = MagicMock()
+        mock_model.with_structured_output.return_value = mock_structured_model
         
         # Sequence of LLM responses: Intent Check -> Query Rewrite -> Inquiry
-        mock_agent_instance.invoke.side_effect = [
+        mock_structured_model.invoke.side_effect = [
             # 1. Intent Check
-            {"structured_response": {"pass_intent_check": True}, "messages": []},
+            IntentCheckResult(pass_intent_check=True),
             # 2. Query Rewrite
-            {"structured_response": {"vector_store_query": "rewritten query"}, "messages": []},
+            QueryRewriteResult(vector_store_query="rewritten query"),
             # 3. Inquiry
-            {"structured_response": {"response": "Final grounded answer"}, "messages": [AIMessage(content="Final grounded answer")]}
+            InquiryResult(response="Final grounded answer")
         ]
         
         # 3. Initialize Processor

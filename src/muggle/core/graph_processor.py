@@ -2,8 +2,7 @@ from pprint import pprint
 from typing import Annotated, Sequence
 
 import pydash
-from langchain.agents import create_agent
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
@@ -68,11 +67,13 @@ class GraphProcessor(ProcessorInterface):
         self._last_error = None
 
         def intent_check_node(state: WorkflowState):
-            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_INTENT_CHECK),
-                                 response_format=IntentCheckResult).invoke(state)
+            model = registry.get_model(default_model)
+            system_prompt = prompt_registry.get_system_prompt(STR_PROMPT_INTENT_CHECK)
 
-            return {"pass_intent_check": pydash.get(state, "structured_response.pass_intent_check"),
-                    "messages": pydash.get(state, "messages")}
+            messages = [SystemMessage(content=system_prompt)] + state.messages
+            result = model.with_structured_output(IntentCheckResult).invoke(messages)
+
+            return {"pass_intent_check": result.pass_intent_check}
 
         def inquiry_node(state: WorkflowState):
             # Format context for the prompt
@@ -80,18 +81,22 @@ class GraphProcessor(ProcessorInterface):
             if state.context:
                 context_str = "\n\n".join([f"### {d['header']}\n{d['text']}" for d in state.context])
 
+            model = registry.get_model(default_model)
             system_prompt = prompt_registry.get_system_prompt(STR_PROMPT_INQUIRY, variables={"context": context_str})
-            state = create_agent(model=registry.get_model(default_model), system_prompt=system_prompt,
-                                 response_format=InquiryResult).invoke(state)
 
-            return {"response": pydash.get(state, "structured_response.response"),
-                    "messages": pydash.get(state, "messages")}
+            messages = [SystemMessage(content=system_prompt)] + state.messages
+            result = model.with_structured_output(InquiryResult).invoke(messages)
+
+            return {"response": result.response, "messages": [AIMessage(content=result.response or "")]}
 
         def query_rewrite_node(state: WorkflowState):
-            state = create_agent(model=registry.get_model(default_model), system_prompt=prompt_registry.get_system_prompt(STR_PROMPT_QUERY_REWRITE),
-                                 response_format=QueryRewriteResult).invoke(state)
+            model = registry.get_model(default_model)
+            system_prompt = prompt_registry.get_system_prompt(STR_PROMPT_QUERY_REWRITE)
 
-            return {"vector_store_query": pydash.get(state, "structured_response.vector_store_query")}
+            messages = [SystemMessage(content=system_prompt)] + state.messages
+            result = model.with_structured_output(QueryRewriteResult).invoke(messages)
+
+            return {"vector_store_query": result.vector_store_query}
 
         def retrieval_node(state: WorkflowState):
             query = state.vector_store_query
