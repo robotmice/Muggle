@@ -19,16 +19,16 @@ from muggle.shared.constants import STR_PROMPT_INTENT_CHECK, STR_LLM_DEFAULT, ST
 
 class WorkflowState(BaseModel):
     messages: Annotated[list, add_messages] = Field(default_factory=list)
-    pass_intent_check: Annotated[bool, Field(description="")] = False
-    response: Annotated[str | None, Field(description="Response to the inquiry")] = None
+    pass_intent_check: bool = Field(False)
+    response: str | None = Field(None, description="Response to the inquiry")
 
 
 class IntentCheckResult(BaseModel):
-    pass_intent_check: Annotated[bool, Field(description="Result of the intent analysis")] = False
+    pass_intent_check: bool = Field(False, description="Result of the intent analysis")
 
 
 class InquiryResult(BaseModel):
-    response: Annotated[str | None, Field(description="Response to the inquiry")] = None
+    response: str | None = Field(None, description="Response to the inquiry")
 
 
 def simple_human_message(messages: list[str]):
