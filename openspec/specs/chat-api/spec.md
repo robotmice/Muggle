@@ -18,3 +18,10 @@ The backend SHALL return a 400 Bad Request if the payload is malformed.
 #### Scenario: Missing message field
 - **WHEN** a POST request is received at `/chat` without a "message" field
 - **THEN** the system returns a 400 Bad Request
+
+### Requirement: Frontend Integration
+The frontend SHALL use `llm` class names for message styling and internal identifiers.
+
+#### Scenario: LLM message display
+- **WHEN** a message is received from the backend
+- **THEN** it MUST be appended with the `llm` type and styled accordingly.

@@ -28,4 +28,4 @@ The application SHALL perform warm-up tasks before signaling readiness, ensuring
 
 #### Scenario: Warm-up completion
 - **WHEN** the application starts
-- **THEN** it SHALL execute a warm-up sequence to verify AI model connectivity and other initial state
+- **THEN** it SHALL execute a warm-up sequence to verify LLM model connectivity and other initial state

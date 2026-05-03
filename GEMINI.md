@@ -1,13 +1,13 @@
 # Project Overview: muggle
 
-`muggle` is a Python-based AI application project managed by Poetry. It is designed around a "spec-driven" development workflow called **OpenSpec**, which leverages Gemini CLI for guided exploration, planning, and implementation.
+`muggle` is a Python-based LLM application project managed by Poetry. It is designed around a "spec-driven" development workflow called **OpenSpec**, which leverages Gemini CLI for guided exploration, planning, and implementation.
 
-The project uses a modern AI stack, including LangChain, LangGraph, and specialized LLM integrations (DeepSeek, DashScope), along with Milvus for vector storage and Flask for potential web interfaces.
+The project uses a modern LLM stack, including LangChain, LangGraph, and specialized LLM integrations (DeepSeek, DashScope), along with Milvus for vector storage and Flask for potential web interfaces.
 
 ## Project Structure
 
 - `src/muggle/`: Main package for the application logic (layered architecture).
-    - `core/`: Pure AI logic and business rules.
+    - `core/`: Pure LLM logic and business rules.
     - `infra/`: Infrastructure concerns (Config, Registries, Prompts).
     - `api/`: Web/API layer (Flask, Blueprints, Static assets).
     - `shared/`: Cross-cutting utilities.

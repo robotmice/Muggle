@@ -1,7 +1,7 @@
 # Capability: Prompt Registry
 
 ## Purpose
-The Prompt Registry provides a centralized and typed way to manage, discover, and render AI prompts stored in the filesystem, ensuring consistency and ease of use across the application.
+The Prompt Registry provides a centralized and typed way to manage, discover, and render LLM prompts stored in the filesystem, ensuring consistency and ease of use across the application.
 
 ## Requirements
 

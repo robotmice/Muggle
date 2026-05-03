@@ -18,13 +18,13 @@ class ConfigManager:
         with open(self.config_path, "rb") as f:
             return tomllib.load(f)
 
-    def get_ai_params(self) -> dict:
-        """Retrieve AI model parameters from the config file."""
-        ai_config = self.config.get("ai", {})
+    def get_llm_params(self) -> dict:
+        """Retrieve LLM model parameters from the config file."""
+        llm_config = self.config.get("llm", {})
         return {
-            "model": ai_config.get("model", "deepseek-chat"),
-            "provider": ai_config.get("provider", "deepseek"),
-            "temperature": ai_config.get("temperature", 0.7),
+            "model": llm_config.get("model", "deepseek-chat"),
+            "provider": llm_config.get("provider", "deepseek"),
+            "temperature": llm_config.get("temperature", 0.7),
         }
 
     def get_server_params(self) -> dict:

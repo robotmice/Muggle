@@ -35,12 +35,12 @@ def setup_components(app):
     prompt_registry = PromptRegistry(prompts_dir=prompt_path)
     
     # Register models from config
-    ai_params = cfg.get_ai_params()
+    llm_params = cfg.get_llm_params()
     model_registry.register(
         "default", 
-        provider=ai_params["provider"], 
-        model_id=ai_params["model"],
-        temperature=ai_params["temperature"]
+        provider=llm_params["provider"], 
+        model_id=llm_params["model"],
+        temperature=llm_params["temperature"]
     )
     
     # Initialize Processor
