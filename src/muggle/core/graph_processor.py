@@ -38,6 +38,7 @@ class GraphProcessor(ProcessorInterface):
         rerank_params = cfg.get_rerank_params()
         memory_params = cfg.get_memory_params()
         validate_params = cfg.get_validate_params()
+        vs_params = cfg.get_vector_store_params()
 
         # -- nodes --
         intent_check = IntentCheckNode(model, prompt_registry)
@@ -55,6 +56,9 @@ class GraphProcessor(ProcessorInterface):
             reranker=DashScopeRerank(top_n=rerank_params["top_n"]),
             recall_limit=rerank_params["recall_limit"],
             relevance_threshold=rerank_params["relevance_threshold"],
+            enable_rerank=rerank_params["enable_rerank"],
+            retrieval_mode=vs_params["retrieval_mode"],
+            top_k=vs_params["top_k"],
         )
         inquiry = InquiryNode(model, prompt_registry)
         validate = ValidationNode(model, prompt_registry, threshold=validate_params["threshold"])

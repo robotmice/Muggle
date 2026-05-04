@@ -53,6 +53,7 @@ class ConfigManager:
             "law_collection_name": vs_config.get("law_collection_name", "social_insurance_law"),
             "embedding_model": vs_config.get("embedding_model", "text-embedding-v3"),
             "top_k": vs_config.get("top_k", 3),
+            "retrieval_mode": vs_config.get("retrieval_mode", "hybrid"),
             "uri": os.getenv("MILVUS_URI"),
             "token": os.getenv("MILVUS_TOKEN"),
         }
@@ -61,6 +62,7 @@ class ConfigManager:
         """Retrieve rerank settings from the config file."""
         rerank_config = self.config.get("rerank", {})
         return {
+            "enable_rerank": rerank_config.get("enable_rerank", True),
             "top_n": rerank_config.get("top_n", 3),
             "relevance_threshold": rerank_config.get("relevance_threshold", 0.1),
             "recall_limit": rerank_config.get("recall_limit", 15),
