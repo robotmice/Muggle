@@ -1,16 +1,4 @@
-# Capability: vector-store
-
-## Purpose
-Manages connections to the Milvus vector database and defines schemas for storing and searching multi-vector embeddings.
-
-## Requirements
-
-### Requirement: Milvus Connection Management
-The system SHALL provide a centralized utility to establish and manage connections to a Milvus instance using parameters defined in the application configuration.
-
-#### Scenario: Successful connection
-- **WHEN** the `VectorStore` is initialized
-- **THEN** it successfully connects to the configured Milvus host and port.
+## MODIFIED Requirements
 
 ### Requirement: FAQ Collection Management with Dual Vectors
 The system SHALL define and maintain a Milvus collection specifically for FAQ data, with a schema that includes:
