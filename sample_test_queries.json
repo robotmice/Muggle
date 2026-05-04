@@ -1,0 +1,42 @@
+[
+  {
+    "query": "What are the membership benefits?",
+    "relevant_ids": []
+  },
+  {
+    "query": "How to file an insurance claim?",
+    "relevant_ids": []
+  },
+  {
+    "query": "What is the waiting period for coverage?",
+    "relevant_ids": []
+  },
+  {
+    "query": "Are pre-existing conditions covered?",
+    "relevant_ids": []
+  },
+  {
+    "query": "How to renew my policy?",
+    "relevant_ids": []
+  },
+  {
+    "query": "What dental services are included?",
+    "relevant_ids": []
+  },
+  {
+    "query": "How are premiums calculated?",
+    "relevant_ids": []
+  },
+  {
+    "query": "Can I add family members to my plan?",
+    "relevant_ids": []
+  },
+  {
+    "query": "What is the refund policy?",
+    "relevant_ids": []
+  },
+  {
+    "query": "How to update personal information?",
+    "relevant_ids": []
+  }
+]

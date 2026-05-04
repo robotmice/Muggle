@@ -7,7 +7,7 @@ from muggle.core.graph_processor import GraphProcessor
 from muggle.core.state import WorkflowState
 from muggle.core.guard import IntentCheckResult
 from muggle.core.response import InquiryResult
-from muggle.core.search import QueryRewriteResult
+from muggle.core.search import QueryRewriteResult, RetrievalNode
 from muggle.core.validation import ValidationResult
 from muggle.infra.registry import ModelRegistry, PromptRegistry, VectorStoreManager
 from muggle.shared.constants import STR_LLM_DEFAULT
@@ -128,6 +128,139 @@ class TestRetrievalDedup(unittest.TestCase):
         doc_ids = [d.metadata.get("header") for d in docs_passed_to_reranker]
         self.assertIn("Shared Header", doc_ids)
         self.assertIn("Unique EN", doc_ids)
+
+
+class TestRetrievalModes(unittest.TestCase):
+    """Test retrieval mode switching and reranker toggle."""
+
+    def setUp(self):
+        self.vector_store = MagicMock(spec=VectorStoreManager)
+        self.vector_store.search.return_value = [
+            {"id": "d1", "header": "H1", "text": "Result 1", "is_segment": False},
+            {"id": "d2", "header": "H2", "text": "Result 2", "is_segment": False},
+            {"id": "d3", "header": "H3", "text": "Result 3", "is_segment": False},
+        ]
+        self.vector_store.hybrid_search.return_value = [
+            {"id": "h1", "header": "HH1", "text": "Hybrid 1", "is_segment": False},
+            {"id": "h2", "header": "HH2", "text": "Hybrid 2", "is_segment": False},
+        ]
+
+    def test_vector_only_mode_uses_search(self):
+        node = RetrievalNode(
+            vector_stores=[self.vector_store],
+            reranker=MagicMock(),
+            recall_limit=10, relevance_threshold=0.5,
+            enable_rerank=False, retrieval_mode="vector_only", top_k=3,
+        )
+        state = WorkflowState(vector_store_queries={"en-US": "test query"})
+        result = node(state, {})
+
+        self.vector_store.search.assert_called_once_with(
+            query_text="test query", limit=3, filter='lang_tag == "en-US"'
+        )
+        self.vector_store.hybrid_search.assert_not_called()
+        self.assertEqual(len(result["retrieved_context"]), 3)
+
+    def test_hybrid_mode_uses_hybrid_search(self):
+        node = RetrievalNode(
+            vector_stores=[self.vector_store],
+            reranker=MagicMock(),
+            recall_limit=10, relevance_threshold=0.5,
+            enable_rerank=False, retrieval_mode="hybrid", top_k=2,
+        )
+        state = WorkflowState(vector_store_queries={"zh-CN": "测试"})
+        result = node(state, {})
+
+        self.vector_store.hybrid_search.assert_called_once_with(
+            query_text="测试", limit=2, filter='lang_tag == "zh-CN"'
+        )
+        self.vector_store.search.assert_not_called()
+        self.assertEqual(len(result["retrieved_context"]), 2)
+
+    def test_rerank_disabled_skips_compressor(self):
+        reranker = MagicMock()
+        node = RetrievalNode(
+            vector_stores=[self.vector_store],
+            reranker=reranker,
+            recall_limit=10, relevance_threshold=0.5,
+            enable_rerank=False, retrieval_mode="hybrid", top_k=2,
+        )
+        state = WorkflowState(vector_store_queries={"en-US": "test"})
+        node(state, {})
+
+        reranker.compress_documents.assert_not_called()
+
+    def test_rerank_enabled_calls_compressor(self):
+        reranker = MagicMock()
+        reranker.compress_documents.return_value = [
+            Document(page_content="Hybrid 1", metadata={"header": "HH1", "is_segment": False, "relevance_score": 0.9}),
+        ]
+        node = RetrievalNode(
+            vector_stores=[self.vector_store],
+            reranker=reranker,
+            recall_limit=10, relevance_threshold=0.5,
+            enable_rerank=True, retrieval_mode="hybrid", top_k=2,
+        )
+        state = WorkflowState(vector_store_queries={"en-US": "test"})
+        result = node(state, {})
+
+        reranker.compress_documents.assert_called_once()
+        self.assertEqual(len(result["retrieved_context"]), 1)
+        self.assertEqual(result["retrieved_context"][0]["relevance_score"], 0.9)
+
+    def test_rerank_threshold_filters_results(self):
+        reranker = MagicMock()
+        reranker.compress_documents.return_value = [
+            Document(page_content="High", metadata={"header": "H", "is_segment": False, "relevance_score": 0.9}),
+            Document(page_content="Low", metadata={"header": "L", "is_segment": False, "relevance_score": 0.3}),
+            Document(page_content="Zero", metadata={"header": "Z", "is_segment": False, "relevance_score": 0.0}),
+        ]
+        node = RetrievalNode(
+            vector_stores=[self.vector_store],
+            reranker=reranker,
+            recall_limit=10, relevance_threshold=0.5,
+            enable_rerank=True, retrieval_mode="hybrid", top_k=3,
+        )
+        state = WorkflowState(vector_store_queries={"en-US": "test"})
+        result = node(state, {})
+
+        self.assertEqual(len(result["retrieved_context"]), 1)
+        self.assertEqual(result["retrieved_context"][0]["text"], "High")
+
+
+class TestEvalMetrics(unittest.TestCase):
+    """Verify evaluation metric functions used in eval_retrieval.py."""
+
+    def test_precision_at_k(self):
+        from eval_retrieval import precision_at_k
+        relevant = {"a", "b", "c"}
+        self.assertAlmostEqual(precision_at_k(["a", "x", "y"], relevant, 3), 1 / 3)
+        self.assertAlmostEqual(precision_at_k(["a", "b", "c"], relevant, 3), 1.0)
+        self.assertAlmostEqual(precision_at_k(["x", "y", "z"], relevant, 3), 0.0)
+        self.assertAlmostEqual(precision_at_k([], relevant, 3), 0.0)
+
+    def test_recall_at_k(self):
+        from eval_retrieval import recall_at_k, precision_at_k
+        relevant = {"a", "b", "c", "d"}
+        self.assertAlmostEqual(recall_at_k(["a", "x"], relevant, 2), 0.25)
+        self.assertAlmostEqual(recall_at_k(["a", "b", "c", "d"], relevant, 4), 1.0)
+        self.assertAlmostEqual(recall_at_k([], relevant, 3), 0.0)
+
+    def test_mrr(self):
+        from eval_retrieval import mrr
+        relevant = {"c"}
+        self.assertAlmostEqual(mrr(["a", "b", "c", "d"], relevant), 1 / 3)
+        self.assertAlmostEqual(mrr(["c", "a", "b"], relevant), 1.0)
+        self.assertAlmostEqual(mrr(["a", "b"], relevant), 0.0)
+
+    def test_ndcg_at_k(self):
+        from eval_retrieval import ndcg_at_k
+        relevant = {"a", "c"}
+        score = ndcg_at_k(["a", "b", "c"], relevant, 3)
+        self.assertGreater(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+        self.assertAlmostEqual(ndcg_at_k(["a", "b", "c"], {"a", "b", "c"}, 3), 1.0)
+        self.assertAlmostEqual(ndcg_at_k(["x", "y"], relevant, 3), 0.0)
 
 
 if __name__ == '__main__':
