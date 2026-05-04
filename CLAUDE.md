@@ -15,6 +15,9 @@ poetry run load-faq --file aia_faq.md --lang en-US # Ingest FAQ markdown into Mi
 poetry run load-law --file 中华人民共和国社会保险法.md --lang zh-CN # Ingest law markdown into Milvus (collection: social_insurance_law)
 poetry run pytest                       # Run all tests
 poetry run pytest tests/test_rag.py     # Run a single test file
+poetry run python eval_retrieval.py                  # Label-driven retrieval eval (P@k, MRR, nDCG)
+poetry run python eval_retrieval_ragas.py            # Ragas LLM-as-judge retrieval eval
+poetry run python eval_retrieval.py --generate-sample  # Generate sample evaluation dataset
 ```
 
 ## Environment Variables
@@ -76,6 +79,14 @@ The graph uses `InMemorySaver` for checkpointing — conversation state persists
 
 `ConfigManager` (`src/muggle/infra/config.py`) reads `config.toml` and loads `.env` via `python-dotenv`. A global singleton `cfg` is used throughout the codebase (not injected). Sections: `[llm]`, `[server]`, `[prompts]`, `[vector_store]`, `[rerank]`, `[memory]`, `[validate]`, `[hybrid_search]`.
 
+### Logging
+
+Structured JSON-line logging via `muggle.infra.logging_setup.JsonFormatter`. Context variables `request_id_var` and `thread_id_var` are set per-request and automatically attached to log records. Individual nodes log duration via `log_duration()` helper.
+
+### Query Cache
+
+`QueryCache` (`src/muggle/infra/cache.py`) is an in-memory exact-match cache with TTL and LRU eviction. Cache keys are MD5-normalized (lowercased, stripped) query strings. Thread-safe. Not persistent.
+
 ### Multi-collection retrieval
 
 The application initializes two `VectorStoreManager` instances — one for FAQ (`aia_faq`) and one for law (`social_insurance_law`). The `RetrievalNode` iterates over both collections, searching each with the appropriate `lang_tag` filter. Results are deduplicated by ID before reranking.
@@ -86,4 +97,6 @@ All Pydantic models in this project use v2-style `Field(default_factory=...)` sy
 
 ## Testing
 
-Tests use `unittest` (stdlib, not pytest fixtures). There are 9 test files under `tests/`. The most comprehensive is `test_rag.py` which mocks all registries and the LLM to test the full GraphProcessor pipeline end-to-end.
+Tests use `unittest` (stdlib, not pytest fixtures). There are 11 test files under `tests/`. The most comprehensive is `test_rag.py` which mocks all registries and the LLM to test the full GraphProcessor pipeline end-to-end.
+
+Evaluation scripts (`eval_retrieval.py`, `eval_retrieval_ragas.py`) live at the project root and are not part of the test suite — they connect to live Milvus and (for the Ragas variant) a live LLM.
