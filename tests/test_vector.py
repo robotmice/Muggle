@@ -38,7 +38,8 @@ def test_idempotency(vs_manager):
         "content_vector": [0.2] * 1024,
         "text": "Test content",
         "header": "Test Header",
-        "is_segment": False
+        "is_segment": False,
+        "lang_tag": "en-US"
     }]
     vs_manager.upsert(data)
     # Upsert again
