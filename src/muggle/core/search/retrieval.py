@@ -15,12 +15,24 @@ class RetrievalNode:
         self.relevance_threshold = relevance_threshold
 
     def __call__(self, state: WorkflowState, config: RunnableConfig) -> dict:
-        query = state.vector_store_query
-        if not query:
+        queries = state.vector_store_queries
+        if not queries:
             return {"retrieved_context": []}
 
-        results = self.vector_store.search(query_text=query, vector_field="content_vector", limit=self.recall_limit)
-        results += self.vector_store.search(query_text=query, vector_field="header_vector", limit=self.recall_limit)
+        results = []
+        seen_ids: set[str] = set()
+        for lang_tag, query in queries.items():
+            lang_results = self.vector_store.hybrid_search(
+                query_text=query,
+                limit=self.recall_limit,
+                filter=f'lang_tag == "{lang_tag}"',
+            )
+            for res in lang_results:
+                res_id = res.get("id", "")
+                if res_id not in seen_ids:
+                    seen_ids.add(res_id)
+                    results.append(res)
+
         if not results:
             return {"retrieved_context": []}
 
@@ -32,7 +44,8 @@ class RetrievalNode:
             for res in results
         ]
 
-        reranked_docs = self.reranker.compress_documents(documents=docs, query=query)
+        rerank_query = queries.get("zh-CN") or queries.get("en-US")
+        reranked_docs = self.reranker.compress_documents(documents=docs, query=rerank_query)
 
         final_context = []
         for doc in reranked_docs:

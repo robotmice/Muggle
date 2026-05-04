@@ -8,7 +8,8 @@ from muggle.shared.constants import STR_PROMPT_QUERY_REWRITE
 
 
 class QueryRewriteResult(BaseModel):
-    vector_store_query: str = Field(..., description="The rewritten query for vector search")
+    query_zh: str = Field(..., description="The rewritten query for zh-CN vector search")
+    query_en: str = Field(..., description="The rewritten query for en-US vector search")
 
 
 class QueryRewriteNode:
@@ -20,4 +21,4 @@ class QueryRewriteNode:
         system_prompt = self.prompt_registry.get_system_prompt(STR_PROMPT_QUERY_REWRITE)
         messages = [SystemMessage(content=system_prompt)] + state.messages
         result = self.model.with_structured_output(QueryRewriteResult).invoke(messages)
-        return {"vector_store_query": result.vector_store_query}
+        return {"vector_store_queries": {"zh-CN": result.query_zh, "en-US": result.query_en}}

@@ -82,6 +82,14 @@ class ConfigManager:
             "max_attempts": validate_config.get("max_attempts", 5),
         }
 
+    def get_hybrid_search_params(self) -> dict:
+        """Retrieve hybrid search settings from the config file."""
+        hs_config = self.config.get("hybrid_search", {})
+        return {
+            "rrf_k": hs_config.get("rrf_k", 60),
+            "recall_limit_per_route": hs_config.get("recall_limit_per_route", 15),
+        }
+
 
 # Global instance for easy access
 cfg = ConfigManager()

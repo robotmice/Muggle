@@ -29,3 +29,7 @@ max_summary_tokens = 256
 [validate]
 threshold = 0.8
 max_attempts = 5
+
+[hybrid_search]
+rrf_k = 60
+recall_limit_per_route = 15

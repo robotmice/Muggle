@@ -9,8 +9,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class FAQLoader:
-    def __init__(self, vector_store: VectorStoreManager):
+    SUPPORTED_LANGS = {"zh-CN", "en-US"}
+
+    def __init__(self, vector_store: VectorStoreManager, lang_tag: str = "zh-CN"):
+        if lang_tag not in self.SUPPORTED_LANGS:
+            raise ValueError(f"Unsupported lang_tag '{lang_tag}'. Supported: {self.SUPPORTED_LANGS}")
         self.vs = vector_store
+        self.lang_tag = lang_tag
         # Headers to split on: H3 represents the question
         self.header_splitter = MarkdownHeaderTextSplitter(
             headers_to_split_on=[("###", "header")]
@@ -57,7 +62,8 @@ class FAQLoader:
                 "content_vector": content_vector,
                 "text": full_text,
                 "header": header,
-                "is_segment": False
+                "is_segment": False,
+                "lang_tag": self.lang_tag,
             })
             
             # 2. If > 200 chars, store segments
@@ -76,7 +82,8 @@ class FAQLoader:
                         "content_vector": seg_content_vector,
                         "text": segment_text,
                         "header": header,
-                        "is_segment": True
+                        "is_segment": True,
+                        "lang_tag": self.lang_tag,
                     })
         
         if records:
@@ -89,10 +96,12 @@ class FAQLoader:
 def run_loader():
     parser = argparse.ArgumentParser(description="Load FAQ markdown into Milvus.")
     parser.add_argument("--file", default="aia_faq.md", help="Path to the FAQ markdown file.")
+    parser.add_argument("--lang", default="zh-CN", choices=["zh-CN", "en-US"],
+                        help="Language tag for the FAQ content.")
     args = parser.parse_args()
 
     vs_manager = VectorStoreManager()
-    loader = FAQLoader(vs_manager)
+    loader = FAQLoader(vs_manager, lang_tag=args.lang)
     loader.load_from_file(args.file)
 
 if __name__ == "__main__":

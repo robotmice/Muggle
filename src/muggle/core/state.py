@@ -13,7 +13,7 @@ from muggle.shared.constants import STR_NODE_SUMMARIZATION, STR_NODE_FALLBACK
 class WorkflowState(BaseModel):
     messages: Annotated[list, add_messages] = Field(default_factory=list)
     pass_intent_check: bool = Field(False)
-    vector_store_query: str | None = Field(None, description="Rewritten query for vector store")
+    vector_store_queries: dict[str, str] = Field(default_factory=dict, description="Rewritten queries for vector store keyed by lang_tag")
     retrieved_context: list[dict] = Field(default_factory=list, description="Retrieved context from vector store")
     response: str | None = Field(None, description="Response to the inquiry")
     attempt_count: int = Field(0, description="Number of validation attempts made")
