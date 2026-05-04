@@ -1,9 +1,4 @@
-# Capability: faq-retrieval
-
-## Purpose
-Defines the logic for retrieving and formatting FAQ information from the vector store.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: FAQ Similarity Search
 
@@ -19,10 +14,3 @@ The system SHALL support retrieving relevant content using hybrid search that co
 - **AND** it MUST return the top N relevant entries (header, text, and lang_tag) from the merged results
 - **AND** the retrieved results SHALL be passed through DashScopeRerank for cross-encoder refinement
 - **AND** results with relevance_score below the configured threshold MUST be filtered out
-
-### Requirement: FAQ Context Formatting
-The system SHALL format retrieved FAQ sections into a single context string suitable for inclusion in an LLM prompt.
-
-#### Scenario: Context formatting
-- **WHEN** multiple FAQ entries are retrieved
-- **THEN** they MUST be concatenated with clear separators between header and text for each entry.
