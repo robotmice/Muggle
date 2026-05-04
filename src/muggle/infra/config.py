@@ -50,6 +50,7 @@ class ConfigManager:
         vs_config = self.config.get("vector_store", {})
         return {
             "collection_name": vs_config.get("collection_name", "muggle_vectors"),
+            "law_collection_name": vs_config.get("law_collection_name", "social_insurance_law"),
             "embedding_model": vs_config.get("embedding_model", "text-embedding-v3"),
             "top_k": vs_config.get("top_k", 3),
             "uri": os.getenv("MILVUS_URI"),

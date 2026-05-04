@@ -27,10 +27,10 @@ from muggle.shared.constants import (
 
 class GraphProcessor(ProcessorInterface):
     def __init__(self, registry: ModelRegistry, prompt_registry: PromptRegistry,
-                 vector_store: VectorStoreManager, default_model: str = STR_LLM_DEFAULT):
+                 vector_stores: list[VectorStoreManager], default_model: str = STR_LLM_DEFAULT):
         self.registry = registry
         self.prompt_registry = prompt_registry
-        self.vector_store = vector_store
+        self.vector_stores = vector_stores
         self.default_model = default_model
 
         model = registry.get_model(default_model)
@@ -51,7 +51,7 @@ class GraphProcessor(ProcessorInterface):
         )
         query_rewrite = QueryRewriteNode(model, prompt_registry)
         retrieval = RetrievalNode(
-            vector_store,
+            vector_stores,
             reranker=DashScopeRerank(top_n=rerank_params["top_n"]),
             recall_limit=rerank_params["recall_limit"],
             relevance_threshold=rerank_params["relevance_threshold"],

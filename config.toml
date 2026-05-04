@@ -13,6 +13,7 @@ path = "muggle.infra.prompts"
 
 [vector_store]
 collection_name = "aia_faq"
+law_collection_name = "social_insurance_law"
 embedding_model = "text-embedding-v3"
 top_k = 3
 

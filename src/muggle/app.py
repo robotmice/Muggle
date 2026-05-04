@@ -32,7 +32,9 @@ def setup_components(app: Flask):
     """Initialize and attach core components to the Flask app."""
     # Initialize Registries
     model_registry = ModelRegistry()
-    vector_store = VectorStoreManager()
+    vs_params = cfg.get_vector_store_params()
+    faq_vs = VectorStoreManager()
+    law_vs = VectorStoreManager(collection_name=vs_params["law_collection_name"])
 
     prompt_registry = PromptRegistry(prompts_dir=pydash.get(cfg.get_prompts_params(), "path"))
 
@@ -50,7 +52,7 @@ def setup_components(app: Flask):
     processor = GraphProcessor(
         registry=model_registry,
         prompt_registry=prompt_registry,
-        vector_store=vector_store,
+        vector_stores=[faq_vs, law_vs],
         default_model=STR_LLM_DEFAULT
     )
 

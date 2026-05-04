@@ -53,7 +53,7 @@ class TestRAGFlow(unittest.TestCase):
         mock_reranker_cls.return_value = mock_reranker
 
         # 3. Initialize Processor
-        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
+        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_stores=[vector_store])
 
         # 4. Execute
         response = processor.get_response("Hello, tell me more about insurance", thread_id="rag_test")
@@ -115,7 +115,7 @@ class TestRetrievalDedup(unittest.TestCase):
         ]
         mock_reranker_cls.return_value = mock_reranker
 
-        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
+        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_stores=[vector_store])
         response = processor.get_response("test query", thread_id="dedup_test")
 
         self.assertEqual(response, "Grounded answer")

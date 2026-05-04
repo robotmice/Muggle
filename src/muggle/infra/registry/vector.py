@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class VectorStoreManager:
-    def __init__(self):
+    def __init__(self, collection_name: str | None = None):
         params = cfg.get_vector_store_params()
         self.uri = params["uri"]
         self.token = params["token"]
-        self.collection_name = params["collection_name"]
+        self.collection_name = collection_name or params["collection_name"]
         self.embedding_model = params["embedding_model"]
         self.top_k = params.get("top_k", 3)
 

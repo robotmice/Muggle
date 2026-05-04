@@ -43,7 +43,7 @@ class TestGraphProcessor(unittest.TestCase):
         
         vector_store = MagicMock(spec=VectorStoreManager)
         vector_store.hybrid_search.return_value = []
-        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
+        processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_stores=[vector_store])
 
         # Turn 1
         resp1 = processor.get_response("Turn 1", thread_id="t1")

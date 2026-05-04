@@ -32,6 +32,7 @@ dependencies = [
 [project.scripts]
 muggle = "muggle.app:run"
 load-faq = "muggle.infra.loaders.faq_loader:run_loader"
+load-law = "muggle.infra.loaders.law_loader:run_loader"
 
 [tool.poetry]
 packages = [{ include = "muggle", from = "src" }]
