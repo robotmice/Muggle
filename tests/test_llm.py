@@ -31,18 +31,18 @@ class TestGraphProcessor(unittest.TestCase):
         # Results for Turn 1 and Turn 2
         results = [
             IntentCheckResult(pass_intent_check=True),
-            QueryRewriteResult(vector_store_query="Query 1"),
+            QueryRewriteResult(query_zh="Query 1 zh", query_en="Query 1 en"),
             InquiryResult(response="Response 1"),
             ValidationResult(pass_validation=True),
             IntentCheckResult(pass_intent_check=True),
-            QueryRewriteResult(vector_store_query="Query 2"),
+            QueryRewriteResult(query_zh="Query 2 zh", query_en="Query 2 en"),
             InquiryResult(response="Response 2"),
             ValidationResult(pass_validation=True),
         ]
         mock_structured_model.invoke.side_effect = results
         
         vector_store = MagicMock(spec=VectorStoreManager)
-        vector_store.search.return_value = []
+        vector_store.hybrid_search.return_value = []
         processor = GraphProcessor(registry=model_registry, prompt_registry=prompt_registry, vector_store=vector_store)
 
         # Turn 1
