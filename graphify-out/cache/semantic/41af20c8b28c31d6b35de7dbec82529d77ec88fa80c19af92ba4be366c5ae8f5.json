@@ -1,0 +1,1 @@
+{"nodes": [{"id": "registry_prompt_promptregistry", "label": "PromptRegistry", "file_type": "code", "source_file": "src/muggle/infra/registry/prompt.py", "source_location": 10, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

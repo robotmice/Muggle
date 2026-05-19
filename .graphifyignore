@@ -1,0 +1,9 @@
+/*
+!/*.toml
+!/*.py
+!/src/
+!/src/**
+!/openspec/
+/openspec/*
+!/openspec/specs
+!/openspec/specs/**
